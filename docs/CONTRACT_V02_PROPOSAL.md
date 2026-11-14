@@ -48,7 +48,7 @@ GREEN/YELLOW/RED/INSUFFICIENT_DATA), семь детекторов DET-01…DET-
 | `diastolic_bp` | int, mmHg, 20–160 | `bp.diastolic` | см. выше |
 | `temp_c` | number, °C, 30–45 | `temp_c` | прямое соответствие (их диапазон — подмножество нашего 25–45) |
 | `resp_rate` | number, breaths/min, 4–60 | `resp_rate` | соответствие с округлением: у нас `int` 0–80 |
-| `radiation_dose_rate` | number, **mSv/h** (по докстрингу схемы), 0–1000 | `radiation_dose_rate` (µSv/h) | **несовпадение единиц, ×1000.** `HEALTHY_BASELINE["radiation_dose_rate"] = 0.012` (mSv/h) = 12 µSv/h, что совпадает с нашим "ISS nominal background 12–30 µSv/h" (AGENTS.md §2) — значит конверсия подтверждена на baseline-значении, но её должна явно сделать data-команда (или мы — в `contract.py`), не предполагать по умолчанию |
+| `radiation_dose_rate` | number, **mSv/h** (по докстрингу схемы), 0–1000 | `radiation_dose_rate` (µSv/h) | **несовпадение единиц, ×1000.** `HEALTHY_BASELINE["radiation_dose_rate"] = 0.012` (mSv/h) = 12 µSv/h, что совпадает с нашим "ISS nominal background 0.2–0.5 mSv/day (≈8–21 µSv/h), episodes up to 1.2 mSv/day (≈50 µSv/h)" (AGENTS.md §2) — значит конверсия подтверждена на baseline-значении, но её должна явно сделать data-команда (или мы — в `contract.py`), не предполагать по умолчанию |
 | `mission_day` | int, 1–3650 | нет поля | **новое аддитивное поле** (см. п.3) |
 | `mission_phase` | enum `PHASE_1_ACUTE_ADAPTATION`/`PHASE_2_LONG_DURATION` | нет поля | **новое аддитивное поле** (см. п.3) |
 | `hrv_rmssd` | number, ms, 0–300 | нет поля | **новое аддитивное поле** (см. п.3) |
@@ -82,7 +82,7 @@ GREEN/YELLOW/RED/INSUFFICIENT_DATA), семь детекторов DET-01…DET-
 ## 3. Предлагаемые аддитивные поля входа v0.2
 
 Все поля **optional**, `default = null`, правило не применяется при `null` (как у существующих
-`noaa_s_scale`/`radiation_dose_30day_msv`/`radiation_dose_career_msv`).
+`noaa_s_scale`/`bfo_dose_30day_mgy_eq`/`radiation_dose_career_msv`).
 
 | поле | тип/единица | зачем мозгу | правило (кратко) | источник |
 |---|---|---|---|---|

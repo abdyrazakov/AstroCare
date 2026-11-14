@@ -114,4 +114,4 @@ def test_multiple_lifestyle_deficits_all_reported(nominal_sample):
     )
     codes = {flag.code for flag in lifestyle_flags(sample)}
     assert codes == {"EXERCISE_DEFICIT", "CALORIC_DEFICIT", "SLEEP_DEFICIT", "LOW_MOOD"}
-    assert all(flag.severity == "yellow" for flag in lifestyle_flags(sample))
+    assert {flag.code: flag.severity for flag in lifestyle_flags(sample)}["CALORIC_DEFICIT"] == "red"

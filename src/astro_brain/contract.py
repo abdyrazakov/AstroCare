@@ -55,7 +55,7 @@ class VitalsSample:
     on_supplemental_o2: bool = False
     consciousness: Consciousness = "alert"
     noaa_s_scale: int | None = None
-    radiation_dose_30day_msv: float | None = None
+    bfo_dose_30day_mgy_eq: float | None = None
     radiation_dose_career_msv: float | None = None
 
 
@@ -78,7 +78,7 @@ _NUMBER_FIELDS: tuple[tuple[str, float, float | None], ...] = (
     ("sleep_hours", 0.0, 24.0),
 )
 
-_OPTIONAL_DOSE_FIELDS = ("radiation_dose_30day_msv", "radiation_dose_career_msv")
+_OPTIONAL_DOSE_FIELDS = ("bfo_dose_30day_mgy_eq", "radiation_dose_career_msv")
 
 _BP_RANGE = (0, 300)
 _NOAA_RANGE = (0, 5)

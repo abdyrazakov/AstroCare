@@ -1,7 +1,4 @@
-"""Lifestyle/operational flags: exercise, calories, sleep, mood.
-
-All four flags are yellow and independent of each other and of NEWS2.
-"""
+"""Lifestyle/operational flags: exercise, calories, sleep, mood."""
 
 from __future__ import annotations
 
@@ -11,7 +8,10 @@ from astro_brain.flags import Flag
 
 # Operational cutoffs; source limitations are recorded in docs/EVIDENCE.md.
 EXERCISE_DEFICIT_RATIO = 0.5
-CALORIC_DEFICIT_RATIO = 0.7
+# JSC-63555 Energy intake operating bands; VERIFIED (docs/EVIDENCE.md).
+CALORIC_LOW_RATIO = 0.80
+CALORIC_DEFICIT_RATIO = CALORIC_LOW_RATIO
+CALORIC_GREEN_RATIO = 0.90
 SLEEP_DEFICIT_HOURS = 6.0
 LOW_MOOD_MAX = 4
 
@@ -34,22 +34,21 @@ def _exercise_deficit_flag(sample: VitalsSample) -> Flag | None:
     )
 
 
-def _caloric_deficit_flag(sample: VitalsSample) -> Flag | None:
-    threshold = CALORIC_DEFICIT_RATIO * sample.caloric_target
-    if sample.caloric_intake >= threshold:
-        return None
+def _caloric_flags(sample: VitalsSample) -> tuple[Flag, ...]:
+    ratio = sample.caloric_intake / sample.caloric_target
+    if ratio < CALORIC_LOW_RATIO:
+        code, severity, band, threshold = "CALORIC_DEFICIT", "red", "red", CALORIC_LOW_RATIO
+    elif ratio < CALORIC_GREEN_RATIO:
+        code, severity, band, threshold = "CALORIC_LOW", "yellow", "yellow", CALORIC_LOW_RATIO
+    else:
+        return ()
     message = (
-        f"Only {sample.caloric_intake} kcal consumed today; minimum is "
-        f"{threshold:.0f} kcal ({CALORIC_DEFICIT_RATIO:.0%} of the "
-        f"{sample.caloric_target} kcal target)."
+        f"Caloric intake is {ratio:.0%} of target ({band} NASA operating band); "
+        f"threshold is {threshold:.0%} of {sample.caloric_target} kcal."
     )
-    return Flag(
-        code="CALORIC_DEFICIT", evidence=EVIDENCE_BY_CODE["CALORIC_DEFICIT"],
-        severity="yellow",
-        message=message,
-        value=sample.caloric_intake,
-        threshold=threshold,
-    )
+    return (Flag(code=code, evidence=EVIDENCE_BY_CODE[code], severity=severity,
+                 message=message, value=sample.caloric_intake,
+                 threshold=threshold * sample.caloric_target),)
 
 
 def _sleep_deficit_flag(sample: VitalsSample) -> Flag | None:
@@ -82,7 +81,7 @@ def lifestyle_flags(sample: VitalsSample) -> tuple[Flag, ...]:
     """All active lifestyle flags for ``sample``, in a fixed order."""
     candidates = (
         _exercise_deficit_flag(sample),
-        _caloric_deficit_flag(sample),
+        *_caloric_flags(sample),
         _sleep_deficit_flag(sample),
         _low_mood_flag(sample),
     )

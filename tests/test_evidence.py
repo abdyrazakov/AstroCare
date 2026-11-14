@@ -25,10 +25,11 @@ TRIGGERS = {
     "NEWS2_HIGH": {"hr": 140, "spo2": 89, "resp_rate": 26},
     "RADIATION_ELEVATED": {"radiation_dose_rate": 150},
     "RADIATION_CRITICAL": {"radiation_dose_rate": 1500},
-    "RADIATION_30DAY_LIMIT": {"radiation_dose_30day_msv": 250},
+    "RADIATION_30DAY_LIMIT": {"bfo_dose_30day_mgy_eq": 250},
     "RADIATION_CAREER_LIMIT": {"radiation_dose_career_msv": 600},
     "EXERCISE_DEFICIT": {"exercise_minutes_today": 0},
     "CALORIC_DEFICIT": {"caloric_intake": 0},
+    "CALORIC_LOW": {"caloric_intake": 2400},
     "SLEEP_DEFICIT": {"sleep_hours": 4},
     "LOW_MOOD": {"mood_score": 3},
 }
@@ -52,7 +53,7 @@ def test_assess_and_pipeline_have_evidence_for_each_flag(code, overrides):
 def test_evidence_mapping_and_document_cover_all_twenty_codes():
     from astro_brain.evidence import EVIDENCE_BY_CODE
 
-    assert len(EVIDENCE_BY_CODE) == 20
+    assert len(EVIDENCE_BY_CODE) == 21
     assert set(EVIDENCE_BY_CODE) == set(TRIGGERS)
     document = Path(__file__).resolve().parents[1] / "docs" / "EVIDENCE.md"
     rows = {line.split("|")[1].strip().strip("`") for line in document.read_text().splitlines()

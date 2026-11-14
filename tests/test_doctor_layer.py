@@ -102,7 +102,7 @@ def test_cache_key_separates_assessments_with_different_condition_codes():
     second = make_assessment(
         alert_level="yellow",
         flags=_flagged(),
-        likely_conditions=(FakeCondition("HYPOXEMIA"),),
+        likely_conditions=(FakeCondition("ALTITUDE_SICKNESS"),),
     )
 
     assert DoctorLayer.cache_key(first) != DoctorLayer.cache_key(second)

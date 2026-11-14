@@ -12,7 +12,7 @@ from astro_brain.scoring import assess
 # https://www.nasa.gov/reference/4-0-human-performance/
 # Requested NASA limits; source and unit assumption tracked in docs/EVIDENCE.md.
 LIMITS = (
-    ("radiation_dose_30day_msv", "RADIATION_30DAY_LIMIT", 250.0),
+    ("bfo_dose_30day_mgy_eq", "RADIATION_30DAY_LIMIT", 250.0),
     ("radiation_dose_career_msv", "RADIATION_CAREER_LIMIT", 600.0),
 )
 
@@ -63,7 +63,7 @@ def test_absent_doses_default_to_none_without_cumulative_flags():
 
 
 def test_limits_emit_once_each_after_existing_radiation_flags(nominal_sample):
-    sample = nominal_sample(radiation_dose_rate=1500, radiation_dose_30day_msv=250,
+    sample = nominal_sample(radiation_dose_rate=1500, bfo_dose_30day_mgy_eq=250,
                             radiation_dose_career_msv=600, sleep_hours=4)
     result = assess(sample)
     assert [flag.code for flag in result.flags] == [
@@ -91,6 +91,6 @@ def test_new_anomalies_pass_scoring_pipeline_and_qa(name, code, level):
 
 def test_nominal_mock_supplies_background_doses():
     raw = nominal_raw("test")
-    assert raw["radiation_dose_30day_msv"] == 15.0
+    assert raw["bfo_dose_30day_mgy_eq"] == 12.0
     assert raw["radiation_dose_career_msv"] == 120.0
     assert assess(parse_sample(raw)).flags == ()

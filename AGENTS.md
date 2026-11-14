@@ -33,7 +33,7 @@ JSON numbers; booleans are JSON `true`/`false` (never `0`/`1`).
 | `bp` | object | mmHg | `{"systolic": int 0–300, "diastolic": int 0–300}`, diastolic ≤ systolic | yes | Blood pressure. |
 | `temp_c` | number | °C | 25 – 45 | yes | Core/body temperature. |
 | `resp_rate` | int | breaths/min | 0 – 80 | yes | Respiratory rate. |
-| `radiation_dose_rate` | number | µSv/h | ≥ 0 | yes | Current absorbed dose rate. ISS nominal background is ~12–30 µSv/h. |
+| `radiation_dose_rate` | number | µSv/h | ≥ 0 | yes | Current absorbed dose rate. ISS nominal background is ~0.2–0.5 mSv/day (≈8–21 µSv/h), episodes up to 1.2 mSv/day (≈50 µSv/h). |
 | `exercise_minutes_today` | int | min | 0 – 1440 | yes | Exercise completed so far today. |
 | `required_exercise_minutes` | int | min | 1 – 1440 | yes | Daily exercise target for this astronaut. |
 | `caloric_intake` | int | kcal | 0 – 20000 | yes | Calories consumed today. |
@@ -43,7 +43,7 @@ JSON numbers; booleans are JSON `true`/`false` (never `0`/`1`).
 | `on_supplemental_o2` | bool | — | `true` / `false` | no (default `false`) | Whether the astronaut is breathing supplemental oxygen (NEWS2 input). |
 | `consciousness` | string | — | `"alert"` \| `"altered"` | no (default `"alert"`) | Level of consciousness (NEWS2 input). |
 | `noaa_s_scale` | int or null | NOAA S-scale | 0 – 5 or `null` | no (default `null`) | Current NOAA Solar Radiation Storm scale, if known. |
-| `radiation_dose_30day_msv` | number or null | mSv | ≥ 0 or `null` | no (default `null`) | Dose over the last 30 days; absent or null disables this rule. Compared numerically to a BFO mGy-Eq limit as a prototype assumption. |
+| `bfo_dose_30day_mgy_eq` | number or null | mGy-Eq | ≥ 0 or `null` | no (default `null`) | BFO dose equivalent over the last 30 days; absent or null disables this rule. |
 | `radiation_dose_career_msv` | number or null | mSv | ≥ 0 or `null` | no (default `null`) | Career effective dose; absent or null disables this rule. |
 
 Type rules (enforced):
@@ -103,7 +103,7 @@ guesses.** Error messages look like `'spo2' out of range: 101 not within [0, 100
   "on_supplemental_o2": true,
   "consciousness": "altered",
   "noaa_s_scale": 3,
-  "radiation_dose_30day_msv": 150.0,
+  "bfo_dose_30day_mgy_eq": 150.0,
   "radiation_dose_career_msv": 120.0
 }
 ```
@@ -128,7 +128,7 @@ One output object per processed input sample. Keys are **camelCase**.
       "message": "Radiation dose rate 140.0 µSv/h is above the 100 µSv/h elevated threshold.",
       "value": 140.0,
       "threshold": 100,
-      "evidenceRef": "Design thresholds; NOAA SWPC S2/S3; ISS background 12–30 µSv/h — VERIFY"
+      "evidenceRef": "Design thresholds; NOAA SWPC S2/S3; ISS background 0.2–0.5 mSv/day (≈8–21 µSv/h), episodes up to 1.2 mSv/day (≈50 µSv/h) — VERIFY"
     },
     {
       "code": "SLEEP_DEFICIT",
@@ -168,6 +168,10 @@ One output object per processed input sample. Keys are **camelCase**.
 
 ### Flag codes
 
+NEWS2 was developed for adult NHS patients; no validation for astronauts or microgravity was found.
+SpO₂, blood pressure, temperature, and consciousness may be confounded by spaceflight adaptation.
+Treat these outputs as prototype signals, never as a validated clinical instrument.
+
 NEWS2 components score 0–3 each. A component flag is emitted when **that component scores ≥ 2**.
 
 | code | severity | trigger |
@@ -186,18 +190,19 @@ NEWS2 components score 0–3 each. A component flag is emitted when **that compo
 | `NEWS2_HIGH` | red | NEWS2 total ≥ 7. |
 | `RADIATION_ELEVATED` | yellow | `radiation_dose_rate ≥ 100 µSv/h` **or** `noaa_s_scale ≥ 2`. |
 | `RADIATION_CRITICAL` | red | `radiation_dose_rate ≥ 1000 µSv/h` **or** `noaa_s_scale ≥ 3`. |
-| `RADIATION_30DAY_LIMIT` | yellow / red | One flag: dose ≥ 125 mSv (50% of 250) is yellow; ≥ 250 mSv (100%) is red. Numeric BFO mGy-Eq comparison is an assumption. `value` = dose; `threshold` = triggered mSv threshold; message gives percent of limit. |
+| `RADIATION_30DAY_LIMIT` | yellow / red | One flag: dose ≥ 125 mGy-Eq (50% of 250) is yellow; ≥ 250 mGy-Eq (100%) is red. `value` = dose; `threshold` = triggered mGy-Eq threshold; message gives percent of limit. |
 | `RADIATION_CAREER_LIMIT` | yellow / red | One flag: career dose ≥ 300 mSv (50% of 600) is yellow; ≥ 600 mSv (100%) is red. `value` = dose; `threshold` = triggered mSv threshold; message gives percent of limit. |
 | `EXERCISE_DEFICIT` | yellow | `exercise_minutes_today < 50 %` of `required_exercise_minutes`. |
-| `CALORIC_DEFICIT` | yellow | `caloric_intake < 70 %` of `caloric_target`. |
+| `CALORIC_LOW` | yellow | `80 % ≤ caloric_intake / caloric_target < 90 %` (NASA yellow operating band). |
+| `CALORIC_DEFICIT` | red | `caloric_intake < 80 %` of `caloric_target` (NASA red operating band). |
 | `SLEEP_DEFICIT` | yellow | `sleep_hours < 6`. |
 | `LOW_MOOD` | yellow | `mood_score ≤ 4`. |
 
-Reference: ISS nominal background radiation is ~12–30 µSv/h, so a nominal sample should never
+Reference: ISS nominal background radiation is ~0.2–0.5 mSv/day (≈8–21 µSv/h), episodes up to 1.2 mSv/day (≈50 µSv/h), so a nominal sample should never
 trigger a radiation flag.
 
 Rule for the UI: **`alertLevel` = worst severity among active flags; no flags → `green`.** Only
-`NEWS2_HIGH`, `RADIATION_CRITICAL`, `RADIATION_30DAY_LIMIT` (at ≥100% of its limit) and
+`NEWS2_HIGH`, `CALORIC_DEFICIT`, `RADIATION_CRITICAL`, `RADIATION_30DAY_LIMIT` (at ≥100% of its limit) and
 `RADIATION_CAREER_LIMIT` (at ≥100% of its limit) can make a sample red. Do not recompute this from
 the flags on the presentation side; read `alertLevel` directly.
 
@@ -219,9 +224,10 @@ diagnosis**. It is a deterministic evidence score over the brain's own flags:
 
 | code | label | supporting flags |
 |---|---|---|
-| `HYPOVOLEMIA` | Hypovolemia / volume depletion | `BP_LOW`, `HR_HIGH`, `RESP_HIGH`, `CONSCIOUSNESS_ALTERED` |
+| `HYPOVOLEMIC_SHOCK` | Hypovolemic shock / acute hypovolemia (EMCL; ICL116) | `BP_LOW` plus one of `HR_HIGH`, `RESP_HIGH`, `CONSCIOUSNESS_ALTERED` |
 | `SEPSIS` | Sepsis | `TEMP_HIGH`, `TEMP_LOW`, `HR_HIGH`, `RESP_HIGH`, `BP_LOW`, `SPO2_LOW` (≥ 2 drivers) |
-| `HYPOXEMIA` | Hypoxemia / hypoxia | `SPO2_LOW`, `RESP_HIGH`, `RESP_LOW`, `CONSCIOUSNESS_ALTERED` |
+| `RESPIRATORY_INFECTION_LOWER` | Lower respiratory tract infection (EMCL) | `TEMP_HIGH`, `RESP_HIGH`, `SPO2_LOW`, `HR_HIGH` (≥ 2 drivers) |
+| `ALTITUDE_SICKNESS` | Altitude sickness / hypobaric hypoxia (EMCL) | `SPO2_LOW`, `RESP_HIGH`, `HR_HIGH` |
 | `ACUTE_RADIATION_SYNDROME` | Acute radiation syndrome / radiation sickness | `RADIATION_CRITICAL`, `RADIATION_30DAY_LIMIT`, `RADIATION_CAREER_LIMIT`, `RADIATION_ELEVATED`, `TEMP_HIGH` |
 | `CARDIAC_ARRHYTHMIA` | De novo cardiac arrhythmia | `HR_HIGH`, `HR_LOW`, `BP_LOW`, `CONSCIOUSNESS_ALTERED` |
 | `SLEEP_DISORDER` | Sleep disorder | `SLEEP_DEFICIT`, `LOW_MOOD` |
@@ -284,7 +290,7 @@ not the production transport.
 - The data team **must announce** any format change before shipping it, and **must never
   silently change** units, key names or ranges. Adding an extra key is allowed without
   announcement (it is ignored), but it will not be used until the contract is updated.
-- Version of this contract: `astro-brain 0.2.0`.
+- Version of this contract: `astro-brain 0.2.1`.
 
 ---
 

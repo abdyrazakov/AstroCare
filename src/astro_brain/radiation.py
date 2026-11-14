@@ -24,7 +24,6 @@ NOAA_S_CRITICAL = 3
 CAREER_EFFECTIVE_DOSE_LIMIT_MSV = 600.0
 # NASA-STD-3001 Vol.1 Table 4.8-1 (BFO, 30-day): VERIFIED in mGy-Eq.
 # https://www.nasa.gov/reference/4-0-human-performance/
-# ASSUMPTION: compare mSv input numerically, without an organ/RBE conversion.
 THIRTY_DAY_BFO_LIMIT_MGY_EQ = 250.0
 # Operational choices, not NASA warning levels: docs/EVIDENCE.md (DESIGN DECISION).
 WARN_FRACTION = 0.5
@@ -92,7 +91,7 @@ def _instantaneous_flags(sample: VitalsSample) -> tuple[Flag, ...]:
     return ()
 
 
-def _limit_flag(dose: float | None, limit: float, code: str, label: str) -> Flag | None:
+def _limit_flag(dose: float | None, limit: float, code: str, label: str, unit: str) -> Flag | None:
     if dose is None or dose < limit * WARN_FRACTION:
         return None
     critical = dose >= limit * CRITICAL_FRACTION
@@ -100,7 +99,7 @@ def _limit_flag(dose: float | None, limit: float, code: str, label: str) -> Flag
     return Flag(
         code=code, evidence=EVIDENCE_BY_CODE[code],
         severity="red" if critical else "yellow",
-        message=f"{label} dose {dose:g} mSv is {dose / limit:.0%} of the limit.",
+        message=f"{label} dose {dose:g} {unit} is {dose / limit:.0%} of the {limit:g} {unit} limit.",
         value=dose,
         threshold=limit * fraction,
     )
@@ -109,9 +108,9 @@ def _limit_flag(dose: float | None, limit: float, code: str, label: str) -> Flag
 def radiation_flags(sample: VitalsSample) -> tuple[Flag, ...]:
     """Existing rate/NOAA flag followed by at most one flag per cumulative limit."""
     cumulative = (
-        _limit_flag(sample.radiation_dose_30day_msv, THIRTY_DAY_BFO_LIMIT_MGY_EQ,
-                    "RADIATION_30DAY_LIMIT", "30-day (BFO proxy; assumed unit equivalence)"),
+        _limit_flag(sample.bfo_dose_30day_mgy_eq, THIRTY_DAY_BFO_LIMIT_MGY_EQ,
+                    "RADIATION_30DAY_LIMIT", "BFO 30-day", "mGy-Eq"),
         _limit_flag(sample.radiation_dose_career_msv, CAREER_EFFECTIVE_DOSE_LIMIT_MSV,
-                    "RADIATION_CAREER_LIMIT", "Career effective"),
+                    "RADIATION_CAREER_LIMIT", "Career effective", "mSv"),
     )
     return _instantaneous_flags(sample) + tuple(flag for flag in cumulative if flag is not None)

@@ -15,5 +15,7 @@
   "caloric_intake": 2600,
   "caloric_target": 2800,
   "sleep_hours": 7.5,
-  "mood_score": 8
+  "mood_score": 8,
+  "bfo_dose_30day_mgy_eq": 12.0,
+  "radiation_dose_career_msv": 120.0
 }

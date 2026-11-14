@@ -32,9 +32,9 @@ def test_nominal_sample_has_no_likely_conditions():
 @pytest.mark.parametrize(
     ("overrides", "condition"),
     [
-        ({"bp": {"systolic": 88, "diastolic": 55}}, "HYPOVOLEMIA"),
+            ({"bp": {"systolic": 88, "diastolic": 55}, "hr": 125}, "HYPOVOLEMIC_SHOCK"),
         ({"hr": 135, "resp_rate": 26, "temp_c": 39.5, "spo2": 93}, "SEPSIS"),
-        ({"spo2": 89}, "HYPOXEMIA"),
+        ({"spo2": 89}, "ALTITUDE_SICKNESS"),
         ({"radiation_dose_rate": 1500.0}, "ACUTE_RADIATION_SYNDROME"),
         ({"hr": 125}, "CARDIAC_ARRHYTHMIA"),
         ({"sleep_hours": 4.0}, "SLEEP_DISORDER"),

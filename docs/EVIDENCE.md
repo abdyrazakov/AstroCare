@@ -3,21 +3,21 @@
 Статусы VERIFY закрывает исследователь команды; пороги со статусом ASSUMPTION подлежат пересмотру до сдачи.
 
 VERIFIED means the cited source was checked, not that the prototype is clinically validated.
-Source checks: 2026-11-14. NEWS2 alert colors and component-flag emission are prototype choices. New dose fields are supplied totals, not integrated from sample timestamps.
+Source checks: 2026-11-14. Research audit: `docs/EVIDENCE_RESEARCH_2026-11-14.md`. NEWS2 alert colors and component-flag emission are prototype choices. New dose fields are supplied totals, not integrated from sample timestamps.
 
 | flag/threshold | value | source | section/page | status (VERIFIED / VERIFY / ASSUMPTION / DESIGN DECISION) | note |
 |---|---|---|---|---|---|
 | CAREER_EFFECTIVE_DOSE_LIMIT_MSV | 600 mSv | [NASA-STD-3001 Vol.1](https://www.nasa.gov/reference/4-0-human-performance/) | §4.8.2, V1 4030 | VERIFIED | Universal career spaceflight effective-dose limit; NASA-specific dose model. |
 | THIRTY_DAY_BFO_LIMIT_MGY_EQ | 250 mGy-Eq | [NASA-STD-3001 Vol.1](https://www.nasa.gov/reference/4-0-human-performance/) | Table 4.8-1, Blood-forming Organs, 30-Day | VERIFIED | Organ-specific dose, not effective dose in mSv. |
-| RADIATION_30DAY_LIMIT | yellow ≥125 mSv; red ≥250 mSv | [NASA table](https://www.nasa.gov/reference/4-0-human-performance/) + prototype choice | Table 4.8-1 | ASSUMPTION | Direct numeric comparison of mSv to mGy-Eq is not a physical unit conversion; organ/RBE data are absent. |
+| RADIATION_30DAY_LIMIT | yellow ≥125 mGy-Eq; red ≥250 mGy-Eq | NASA-STD-3001 Table 4.8-1 + prototype choice | p.40 | ASSUMPTION | Input is BFO mGy-Eq; direct comparison to effective dose would be invalid. |
 | RADIATION_CAREER_LIMIT | yellow ≥300 mSv; red ≥600 mSv | [NASA limit](https://www.nasa.gov/reference/4-0-human-performance/) + prototype choice | §4.8.2, V1 4030 | DESIGN DECISION | 50% warning and red at the limit are application severities, not NASA clinical triage. |
 | WARN_FRACTION | 0.5 | v0.2 specification | Operational policy | DESIGN DECISION | Warn at half of either cumulative limit. |
 | CRITICAL_FRACTION | 1.0 | v0.2 specification | Operational policy | DESIGN DECISION | Red at or above the cumulative limit. |
 | radiation_dose_career_msv input provenance | NASA effective dose | [NASA definition](https://www.nasa.gov/reference/4-0-human-performance/) | §4.8.2 note | VERIFY | Data team must confirm input dosimetry uses the NASA effective-dose model. |
 | NASA edition provenance | Rev C, approved 2023-09-15 | [NASA PDF](https://www.nasa.gov/wp-content/uploads/2023/11/nasa-std-3001-vol-1-rev-c-with-signature.pdf) | title page; §4.8.2 p.39; Table 4.8-1 p.40 | VERIFIED | Checked the actual Rev C PDF; not a 2022 revision. |
-| NCRP 2021 attribution | origin of universal 600 mSv recommendation | v0.2 specification | Exact document not established | VERIFY | Do not attribute this recommendation to NCRP 2021 without researcher confirmation. |
-| nominal mock cumulative doses | 15 mSv / 30 days; 120 mSv career | v0.2 specification | Synthetic fixture | ASSUMPTION | 15 assumes 0.5 mSv/day; neither value is a measured crew history or safety threshold. |
-| cumulative-dose mock anomalies | 150 mSv / 30 days; 660 mSv career | v0.2 specification and limits above | Synthetic fixture | DESIGN DECISION | Test stimuli for warning and exceeded-limit paths, not additional thresholds. |
+| Former career-limit attribution | origin of universal 600 mSv recommendation | NASA-STD-3001 Rev C §4.8.2; NASEM 2021 | p.39; Box 3-1 | CONFLICT | NASA cites NASEM 2021; legacy attribution was incorrect; NCRP Report 132 is only for organ limits. |
+| nominal mock cumulative doses | 12 mGy-Eq / 30 days; 120 mSv career | Shavers et al. 2023; synthetic fixture | Results | ASSUMPTION | Synthetic fixture, not measured crew history. |
+| cumulative-dose mock anomalies | 150/260 mGy-Eq 30-day; 350/660 mSv career | v0.2 specification and limits above | Synthetic fixture | DESIGN DECISION | Test stimuli for warning and exceeded-limit paths, not additional thresholds. |
 | HR_HIGH | ≥111 bpm | [RCP](https://www.rcp.ac.uk/media/a4ibkkbf/news2-final-report_0_0.pdf) | Chart 1, p.29 | VERIFIED | NEWS2 bands; prototype color. |
 | HR_LOW | ≤40 bpm | [RCP](https://www.rcp.ac.uk/media/a4ibkkbf/news2-final-report_0_0.pdf) | Chart 1, p.29 | VERIFIED | NEWS2 bands; prototype color. |
 | SPO2_LOW | ≤93% | [RCP](https://www.rcp.ac.uk/media/a4ibkkbf/news2-final-report_0_0.pdf) | Chart 1, p.29 | VERIFIED | Scale 1. |
@@ -33,16 +33,16 @@ Source checks: 2026-11-14. NEWS2 alert colors and component-flag emission are pr
 | FLAGGED_MIN_SCORE | component score ≥2 | Existing application policy | — | DESIGN DECISION | Component flag emission/color is not an RCP prescription. |
 | RADIATION_ELEVATED | ≥100 µSv/h or S≥2 | [NOAA SWPC](https://www.swpc.noaa.gov/noaa-scales-explanation); existing contract | Solar Radiation Storms, S2 | DESIGN DECISION | Rate threshold and yellow mapping are ours; NOAA defines a particle-flux storm scale, not a crew dose threshold. |
 | RADIATION_CRITICAL | ≥1000 µSv/h or S≥3 | [NOAA SWPC](https://www.swpc.noaa.gov/noaa-scales-explanation); existing contract | Solar Radiation Storms, S3 | DESIGN DECISION | Rate threshold and red mapping are ours; NOAA recommends astronaut EVA hazard avoidance at S3. |
-| ISS background context | 12–30 µSv/h | Legacy contract; exact primary citation not established | — | VERIFY | Context only; not a NASA permissible-exposure limit. |
-| EXERCISE_DEFICIT | <50% prescribed minutes | ISS MORD exercise prescription; [NASA MORD context](https://www.nasa.gov/reference/6-0-medical-operations/) | Specific ISS MORD edition/section not verified | VERIFY | MORD exists; the 50% alert is a design decision, not a verified MORD cutoff. |
-| CALORIC_DEFICIT | <70% caloric target | JSC-63555; [NASA handbook reference](https://www.nasa.gov/wp-content/uploads/2023/03/human-integration-design-handbook-revision-1.pdf) | Exact JSC-63555 section not verified | VERIFY | Document identified through NASA handbook; 70% is a design decision, not a verified nutrition standard. |
+| ISS background context | 0.2–0.5 mSv/day (≈8–21 µSv/h); episodes up to 1.2 mSv/day (≈50 µSv/h) | Shavers et al. 2023; NASA/JSC acute effects | Results; text | CONFLICT | The former narrow range was a derived envelope, not a quoted measured range. |
+| EXERCISE_DEFICIT | <50% prescribed minutes | NASA SP-20250000273; NTRS 20110016265 | Current exercise practices; Abstract | VERIFIED / DESIGN DECISION | Prescription verified; <50% cutoff is our design decision; MORD SSP 50260 not publicly opened. |
+| CALORIC_DEFICIT | <80% of EER red; 80–90% yellow | JSC-63555 (2005), Energy intake operating bands | Table | VERIFIED | NASA operating bands: 90–100% green, 80–90% yellow, <80% red. |
 | SLEEP_DEFICIT | <6 h | [Barger et al. 2014](https://pmc.ncbi.nlm.nih.gov/articles/PMC4188436/) | Table 2, Results (ISS actigraphy 6.09 h) | DESIGN DECISION | Observed mean is verified; it does not establish a safe minimum or this alert cutoff. |
-| LOW_MOOD | ≤4 on ad hoc 1–10 scale | Application policy; [Kroenke et al. 2003](https://pubmed.ncbi.nlm.nih.gov/14583691/) | PHQ-2 abstract, context only | DESIGN DECISION | Current scale is not PHQ-2 and has no validated mapping to it; PHQ-2 implementation awaits phase 0. |
+| LOW_MOOD | ≤4 on ad hoc 1–10 scale | Application policy; Kroenke 2003 | PHQ-2 abstract | DESIGN DECISION | Current scale is unvalidated; NASA operational cognitive monitoring uses monthly WinSCAT. |
 | EMCL/IMM condition vocabulary | EMCL ~100 conditions; IMM 100 conditions | [ExMC evidence report (EMCL JSC-65722; IMM)](https://ntrs.nasa.gov/api/citations/20170004604/downloads/20170004604.pdf); [NASA Appendix E](https://www.nasa.gov/reference/appendix-e-health-and-medical-care-technical-requirements/); [NASA IMM overview](https://www.nasa.gov/nasa-integrated-medical-model-imm-overview) | EMCL and IMM sections | VERIFIED | Used for condition names only; the IMM itself is a Monte Carlo mission-planning model, not a runtime classifier. |
 | IMM-lite scoring model | confidence = min(1, Σ weights / saturation); floor 0.25; top 3 | v0.2 prototype | `src/astro_brain/conditions.py` | DESIGN DECISION | Not the IMM; not a calibrated probability; never a diagnosis. |
-| HYPOVOLEMIA | EMCL condition name | EMCL/IMM list above | Exact EMCL entry not confirmed in checked sources | VERIFY | Name to be confirmed by the researcher; weights are ours. |
+| HYPOVOLEMIC_SHOCK | EMCL “Hypovolemic Shock”; ICL116 | EMCL Table 2; SMEMCL 2011; HRP-48036 Rev B | Table 2; ICL116 | VERIFIED | ICL116 also lists CNES synonym “Acute Hypovolemia”; weights are ours. |
 | SEPSIS | EMCL/IMM "Sepsis" | [NASA Appendix E](https://www.nasa.gov/reference/appendix-e-health-and-medical-care-technical-requirements/) | Other conditions not captured elsewhere | VERIFIED | Condition name only; weights are ours. |
-| HYPOXEMIA | EMCL "Hypoxia" | EMCL/IMM list above | Exact EMCL entry not confirmed in checked sources | VERIFY | Name to be confirmed by the researcher; weights are ours. |
+| ALTITUDE_SICKNESS | EMCL “Altitude sickness” | EMCL Table 2; NASA Appendix E | Table 2; Table E.2-2 | VERIFIED | Hypoxia is ARCL88 only; weights are ours. |
 | ACUTE_RADIATION_SYNDROME | EMCL/IMM "Acute radiation syndrome" | [NASA Appendix E](https://www.nasa.gov/reference/appendix-e-health-and-medical-care-technical-requirements/); [IMM overview](https://www.nasa.gov/nasa-integrated-medical-model-imm-overview) | Environmental or spaceflight induced medical conditions | VERIFIED | Condition name only; weights are ours. |
 | CARDIAC_ARRHYTHMIA | EMCL "De Novo Cardiac Arrhythmia" | [SMEMCL 2011](https://ntrs.nasa.gov/api/citations/20110008645/downloads/20110008645.pdf) | Priority Condition list | VERIFIED | Condition name only; weights are ours. |
 | SLEEP_DISORDER | IMM "Sleep Disorders" | [IMM overview](https://www.nasa.gov/nasa-integrated-medical-model-imm-overview) | Modeled Medical Conditions | VERIFIED | Condition name only; weights are ours. |
@@ -51,3 +51,7 @@ Source checks: 2026-11-14. NEWS2 alert colors and component-flag emission are pr
 
 No diagnosis is inferred from these flags. Sources identify provenance and limitations;
 they do not turn operational prototype cutoffs into validated clinical rules.
+
+| NEWS2 spaceflight validation | no validation found | RCP NEWS2 2017 | Recommendations; §3 | NOT FOUND | Terrestrial adult acute-illness tool; no astronaut/microgravity validation found. |
+| CALORIC_LOW | 80–90% of EER | JSC-63555 (2005) | Energy intake operating bands | VERIFIED | Yellow operating band. |
+| RESPIRATORY_INFECTION_LOWER | EMCL lower respiratory tract infection | EMCL Table 2 | Table 2 | VERIFIED | Weights are prototype. |

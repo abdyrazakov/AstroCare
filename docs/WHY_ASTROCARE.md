@@ -41,7 +41,7 @@ deterministically and transparently — not a diagnosis, and not NASA's Monte Ca
 
 **Implementation today:** `src/astro_brain/conditions.py` reuses condition names from the
 Exploration Medical Condition List (EMCL, JSC-65722) and the Integrated Medical Model (IMM)
-vocabulary — e.g. `HYPOVOLEMIA`, `SEPSIS`, `HYPOXEMIA`, `ACUTE_RADIATION_SYNDROME`,
+vocabulary — e.g. `HYPOVOLEMIC_SHOCK`, `SEPSIS`, `ALTITUDE_SICKNESS`, `ACUTE_RADIATION_SYNDROME`,
 `CARDIAC_ARRHYTHMIA`, `SLEEP_DISORDER`, `DEPRESSION`, `NUTRITIONAL_DEFICIT` — but replaces IMM's
 Monte Carlo mission simulation with a pure, deterministic function: `confidence = min(1, Σ
 weights / saturation)` over the brain's own active flags, each condition requiring a minimum
@@ -60,8 +60,8 @@ specific active flags listed in `drivers`.
 **Honest limitation:** `confidence` is an evidence-strength score invented for this prototype
 (`docs/EVIDENCE.md`: "DESIGN DECISION ... Not the IMM; not a calibrated probability"), not a
 validated clinical probability, and several condition-name mappings are marked `VERIFY` in
-`docs/EVIDENCE.md` pending a researcher confirming the exact EMCL entry (e.g. `HYPOVOLEMIA`,
-`HYPOXEMIA`).
+`docs/EVIDENCE.md` pending a researcher confirming the exact EMCL entry (e.g. `HYPOVOLEMIC_SHOCK`,
+`ALTITUDE_SICKNESS`).
 
 ---
 

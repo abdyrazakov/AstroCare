@@ -58,7 +58,8 @@ FLAG_ADVICE: Final[dict[str, str]] = {
         "before planning further exposure."
     ),
     "EXERCISE_DEFICIT": "Exercise today is below target; schedule the remaining time if feasible.",
-    "CALORIC_DEFICIT": "Caloric intake is below target; increase food intake at the next meal.",
+    "CALORIC_DEFICIT": "Caloric intake is in the NASA red band; increase food intake and contact ground nutrition.",
+    "CALORIC_LOW": "Caloric intake is in the NASA yellow band; increase food intake at the next meal and monitor the target.",
     "SLEEP_DEFICIT": "Sleep was below 6 hours; schedule a rest period before demanding tasks.",
     "LOW_MOOD": "Mood score is low; check in with the astronaut and consider a support break.",
 }

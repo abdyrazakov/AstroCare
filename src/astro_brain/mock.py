@@ -25,12 +25,14 @@ _MAX_ANOMALIES = 5
 
 # Synthetic scenario values, not safety thresholds: docs/EVIDENCE.md (ASSUMPTION).
 # Requested ISS-like 0.5 mSv/day * 30 days; career history is illustrative.
-_NOMINAL_30DAY_MSV = 15.0
+_NOMINAL_30DAY_MGY_EQ = 12.0
 _NOMINAL_CAREER_MSV = 120.0
 # Test stimuli above the limits documented at:
 # https://www.nasa.gov/reference/4-0-human-performance/
-_WARNING_30DAY_MSV = 150.0
+_WARNING_30DAY_MGY_EQ = 150.0
+_EXCEEDED_30DAY_MGY_EQ = 260.0
 _EXCEEDED_CAREER_MSV = 660.0
+_CAREER_WARNING_MSV = 350.0
 
 # Required values match tests/conftest.py; optional cumulative doses are synthetic.
 _NOMINAL_RAW: dict[str, Any] = {
@@ -40,7 +42,7 @@ _NOMINAL_RAW: dict[str, Any] = {
     "temp_c": 36.7,
     "resp_rate": 15,
     "radiation_dose_rate": 20.0,
-    "radiation_dose_30day_msv": _NOMINAL_30DAY_MSV,
+    "bfo_dose_30day_mgy_eq": _NOMINAL_30DAY_MGY_EQ,
     "radiation_dose_career_msv": _NOMINAL_CAREER_MSV,
     "exercise_minutes_today": 120,
     "required_exercise_minutes": 150,
@@ -90,23 +92,30 @@ def _anomaly(
 ANOMALIES: Mapping[str, Anomaly] = {
     anomaly.name: anomaly
     for anomaly in (
-        _anomaly("dose_30day_warning", {"radiation_dose_30day_msv": _WARNING_30DAY_MSV},
+        _anomaly("dose_30day_warning", {"bfo_dose_30day_mgy_eq": _WARNING_30DAY_MGY_EQ},
                  "yellow", "RADIATION_30DAY_LIMIT",
                  conditions=("ACUTE_RADIATION_SYNDROME",)),
+        _anomaly("dose_30day_exceeded", {"bfo_dose_30day_mgy_eq": _EXCEEDED_30DAY_MGY_EQ},
+                 "red", "RADIATION_30DAY_LIMIT"),
+        _anomaly("career_limit_warning", {"radiation_dose_career_msv": _CAREER_WARNING_MSV},
+                 "yellow", "RADIATION_CAREER_LIMIT"),
         _anomaly("career_limit_exceeded", {"radiation_dose_career_msv": _EXCEEDED_CAREER_MSV},
                  "red", "RADIATION_CAREER_LIMIT"),
         _anomaly("tachycardia", {"hr": 125}, "yellow", "HR_HIGH",
                  conditions=("CARDIAC_ARRHYTHMIA",)),
         _anomaly("hypoxia", {"spo2": 89}, "yellow", "SPO2_LOW", "NEWS2_MEDIUM",
-                 conditions=("HYPOXEMIA",)),
+                 conditions=("ALTITUDE_SICKNESS",)),
         _anomaly(
             "hypotension",
             {"bp": {"systolic": 88, "diastolic": 55}},
             "yellow",
             "BP_LOW",
             "NEWS2_MEDIUM",
-            conditions=("HYPOVOLEMIA",),
+            conditions=(),
         ),
+        _anomaly("hypovolemia_like", {"bp": {"systolic": 85, "diastolic": 55}, "hr": 125},
+                 "yellow", "BP_LOW", "HR_HIGH", "NEWS2_MEDIUM",
+                 conditions=("HYPOVOLEMIC_SHOCK",)),
         _anomaly("fever", {"temp_c": 39.4}, "yellow", "TEMP_HIGH"),
         _anomaly("radiation_storm", {"radiation_dose_rate": 1500.0}, "red", "RADIATION_CRITICAL",
                  conditions=("ACUTE_RADIATION_SYNDROME",)),
@@ -115,15 +124,16 @@ ANOMALIES: Mapping[str, Anomaly] = {
                  conditions=("SLEEP_DISORDER",)),
         _anomaly("low_mood", {"mood_score": 3}, "yellow", "LOW_MOOD",
                  conditions=("DEPRESSION",)),
-        _anomaly("caloric_deficit", {"caloric_intake": 1500}, "yellow", "CALORIC_DEFICIT",
+        _anomaly("caloric_deficit", {"caloric_intake": 1500}, "red", "CALORIC_DEFICIT",
                  conditions=("NUTRITIONAL_DEFICIT",)),
+        _anomaly("caloric_low", {"caloric_intake": 2400}, "yellow", "CALORIC_LOW"),
         _anomaly("exercise_deficit", {"exercise_minutes_today": 30}, "yellow", "EXERCISE_DEFICIT"),
         _anomaly(
             "sepsis_like",
             {"hr": 135, "resp_rate": 26, "temp_c": 39.5, "spo2": 93},
             "red",
             "NEWS2_HIGH",
-            conditions=("SEPSIS", "HYPOXEMIA", "CARDIAC_ARRHYTHMIA"),
+            conditions=("SEPSIS", "RESPIRATORY_INFECTION_LOWER"),
         ),
     )
 }

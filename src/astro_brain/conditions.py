@@ -59,8 +59,8 @@ class LikelyCondition:
 # single-signal guesses for conditions that need a constellation of findings.
 CONDITION_RULES: tuple[ConditionRule, ...] = (
     ConditionRule(
-        code="HYPOVOLEMIA",
-        label="Hypovolemia / volume depletion",
+        code="HYPOVOLEMIC_SHOCK",
+        label="Hypovolemic shock / acute hypovolemia (EMCL; ICL116)",
         saturation=0.9,
         weights=(
             ("BP_LOW", 0.45),
@@ -68,6 +68,7 @@ CONDITION_RULES: tuple[ConditionRule, ...] = (
             ("RESP_HIGH", 0.10),
             ("CONSCIOUSNESS_ALTERED", 0.15),
         ),
+        min_drivers=2,
     ),
     ConditionRule(
         code="SEPSIS",
@@ -84,15 +85,20 @@ CONDITION_RULES: tuple[ConditionRule, ...] = (
         min_drivers=2,
     ),
     ConditionRule(
-        code="HYPOXEMIA",
-        label="Hypoxemia / hypoxia",
-        saturation=0.8,
+        code="RESPIRATORY_INFECTION_LOWER",
+        label="Lower respiratory tract infection (EMCL)",
+        saturation=0.85,
         weights=(
-            ("SPO2_LOW", 0.65),
-            ("RESP_HIGH", 0.15),
-            ("RESP_LOW", 0.10),
-            ("CONSCIOUSNESS_ALTERED", 0.10),
+            ("TEMP_HIGH", 0.35), ("RESP_HIGH", 0.30),
+            ("SPO2_LOW", 0.30), ("HR_HIGH", 0.10),
         ),
+        min_drivers=2,
+    ),
+    ConditionRule(
+        code="ALTITUDE_SICKNESS",
+        label="Altitude sickness / hypobaric hypoxia (EMCL)",
+        saturation=0.8,
+        weights=(("SPO2_LOW", 0.60), ("RESP_HIGH", 0.15), ("HR_HIGH", 0.10)),
     ),
     ConditionRule(
         code="ACUTE_RADIATION_SYNDROME",
@@ -137,7 +143,10 @@ CONDITION_RULES: tuple[ConditionRule, ...] = (
         code="NUTRITIONAL_DEFICIT",
         label="Nutritional deficiency",
         saturation=0.8,
-        weights=(("CALORIC_DEFICIT", 0.70), ("EXERCISE_DEFICIT", 0.10)),
+        weights=(
+            ("CALORIC_DEFICIT", 0.70), ("CALORIC_LOW", 0.35),
+            ("EXERCISE_DEFICIT", 0.10),
+        ),
     ),
 )
 

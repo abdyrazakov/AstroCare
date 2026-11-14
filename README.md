@@ -233,8 +233,10 @@ Each built-in flag now includes `evidenceRef`; sources and verification status: 
 ## Medical disclaimer
 
 This is a hackathon prototype, not a medical device. NEWS2 is a terrestrial hospital early-warning
-score adapted here for convenience; it has not been validated for spaceflight physiology and must
-not be used to make real medical decisions.
+score adapted here for convenience; it has not been validated for spaceflight physiology. NEWS2 was
+developed for adult NHS patients, and no validation for astronauts or microgravity was found. SpO2,
+blood pressure, temperature, and consciousness may be confounded by spaceflight adaptation; outputs
+must not be used as a validated clinical instrument or for real medical decisions.
 
 ## Development
 

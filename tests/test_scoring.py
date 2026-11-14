@@ -83,7 +83,7 @@ def test_assessment_ranks_imm_lite_conditions_for_a_degraded_sample(nominal_samp
     result = assess(sample)
     codes = result.condition_codes()
     assert "SEPSIS" in codes
-    assert "HYPOXEMIA" in codes
+    assert "ALTITUDE_SICKNESS" in codes
     assert codes == tuple(condition.code for condition in result.likely_conditions)
 
 
