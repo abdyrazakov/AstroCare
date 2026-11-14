@@ -204,6 +204,11 @@ violates the contract; the message names the offending field.
 |---|---|---|---|
 | `POST` | `/ingest` | one input-contract JSON object | the output-contract JSON for that sample (HTTP 200), or HTTP 400 with `{"error": "<message naming the field>"}` on contract violation |
 | `GET` | `/state` | — | the latest output-contract JSON produced (HTTP 200), or HTTP 200 with `{"status": "no data yet"}` if nothing has been ingested yet |
+| `GET` | `/state?astronaut_id=X` | — | latest output for X, or HTTP 200 with `{"status":"no data yet","astronautId":"X"}` |
+| `GET` | `/state/all` | — | HTTP 200 with `{"astronauts":{"ASTRO-01":{...}},"count":N}` |
+| `GET` | `/history` | — | HTTP 200 with the last 50 outputs in global arrival order |
+| `GET` | `/history?astronaut_id=X` | — | HTTP 200 with the last 50 outputs for X, or `[]` |
+| `GET` | `/` | — | plain text: one latest-output block per astronaut, followed by doctorStats |
 
 Example:
 

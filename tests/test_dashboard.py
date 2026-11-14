@@ -191,3 +191,74 @@ def test_build_brain_live_defers_to_env_driven_brain_default(monkeypatch):
     # Assert
     assert isinstance(brain, Brain)
     assert brain._doctor._enabled is True
+
+
+def _ingest_as(server, astronaut_id, **overrides):
+    raw = {**NOMINAL_SAMPLE, "astronaut_id": astronaut_id, **overrides}
+    status, body = _post(server, "/ingest", json.dumps(raw).encode())
+    assert status == 200
+    return json.loads(body)
+
+
+def test_state_all_and_filtered_state_preserve_global_latest(running_server):
+    first = _ingest_as(running_server, "ASTRO-01", mood_score=3)
+    second = _ingest_as(running_server, "ASTRO-02")
+    status, _, body = _get(running_server, "/state/all")
+    assert status == 200
+    assert json.loads(body) == {"astronauts": {"ASTRO-01": first, "ASTRO-02": second}, "count": 2}
+    assert json.loads(_get(running_server, "/state?astronaut_id=ASTRO-01")[2]) == first
+    assert json.loads(_get(running_server, "/state?astronaut_id=ASTRO-02")[2]) == second
+    assert json.loads(_get(running_server, "/state")[2]) == second
+
+
+def test_unknown_astronaut_returns_no_data_and_empty_history(running_server):
+    _ingest_as(running_server, "ASTRO-01")
+    status, _, body = _get(running_server, "/state?astronaut_id=UNKNOWN")
+    assert status == 200
+    assert json.loads(body) == {"status": "no data yet", "astronautId": "UNKNOWN"}
+    assert json.loads(_get(running_server, "/history?astronaut_id=UNKNOWN")[2]) == []
+
+
+def test_empty_state_all(running_server):
+    assert json.loads(_get(running_server, "/state/all")[2]) == {"astronauts": {}, "count": 0}
+
+
+def test_histories_are_independently_bounded_and_ordered(running_server):
+    expected = {"ASTRO-01": [], "ASTRO-02": []}
+    global_history = []
+    for index in range(52):
+        for astronaut_id in expected:
+            output = _ingest_as(running_server, astronaut_id, timestamp=f"tick-{index}")
+            expected[astronaut_id].append(output)
+            global_history.append(output)
+    for astronaut_id, outputs in expected.items():
+        path = f"/history?astronaut_id={astronaut_id}"
+        assert json.loads(_get(running_server, path)[2]) == outputs[-50:]
+    assert json.loads(_get(running_server, "/history")[2]) == global_history[-50:]
+
+
+def test_root_displays_every_astronaut_then_doctor_stats(running_server):
+    _ingest_as(running_server, "ASTRO-01", mood_score=3)
+    _ingest_as(running_server, "ASTRO-02")
+    status, content_type, body = _get(running_server, "/")
+    text = body.decode()
+    assert status == 200
+    assert content_type == "text/plain; charset=utf-8"
+    assert text.index("ASTRO-01") < text.index("ASTRO-02") < text.index("doctorStats")
+    for field in ("astronautId", "alertLevel", "activeFlags", "doctorSource"):
+        assert text.count(field) == 2
+
+
+@pytest.mark.parametrize("crew", [1, 3, 6])
+def test_cli_accepts_crew_size(crew):
+    from astro_brain.dashboard import _parse_args
+
+    assert _parse_args(["--crew", str(crew)]).crew == crew
+
+
+@pytest.mark.parametrize("crew", [0, 7])
+def test_cli_rejects_invalid_crew_size(crew):
+    from astro_brain.dashboard import _parse_args
+
+    with pytest.raises(SystemExit):
+        _parse_args(["--crew", str(crew)])

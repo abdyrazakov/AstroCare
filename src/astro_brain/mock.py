@@ -158,16 +158,21 @@ def scenario(seed: int = 42, length: int = 24, anomalies: int = 4) -> tuple[Step
     return tuple(steps)
 
 
-def stream(seed: int = 42, period_s: float = 1.0):
-    """Yield raw input-contract dicts forever, cycling ``scenario(seed)``.
+def stream(
+    seed: int = 42, period_s: float = 1.0,
+    astronaut_ids: tuple[str, ...] = ("ASTRO-01",),
+):
+    """Cycle per-astronaut scenarios, yielding one crew round per period.
 
-    Used by the dashboard's ``--simulate`` mode to drive a live feed; a test
-    should pass ``period_s=0`` (or wrap with ``itertools.islice``) rather than
-    consume this generator in real time.
+    Each member uses seed + their index; the default preserves the single-member
+    stream. Use period_s=0 in tests. IDs must be nonempty and unique.
     """
-    steps = scenario(seed=seed)
+    if not astronaut_ids or not all(astronaut_ids) or len(set(astronaut_ids)) != len(astronaut_ids):
+        raise ValueError("astronaut_ids must be nonempty, unique IDs")
+    scenarios = [scenario(seed=seed + index) for index in range(len(astronaut_ids))]
     while True:
-        for step in steps:
-            yield step.raw
+        for crew_steps in zip(*scenarios):
+            for astronaut_id, step in zip(astronaut_ids, crew_steps):
+                yield {**step.raw, "astronaut_id": astronaut_id}
             if period_s > 0:
                 time.sleep(period_s)

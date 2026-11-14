@@ -124,3 +124,24 @@ def test_stream_cycles_scenario_without_sleeping():
     raws = list(itertools.islice(stream(seed=42, period_s=0), 2 * len(scenario_raws)))
     assert raws[: len(scenario_raws)] == scenario_raws
     assert raws[len(scenario_raws) : 2 * len(scenario_raws)] == scenario_raws
+
+
+def test_crew_stream_interleaves_independent_seeded_scenarios():
+    from itertools import islice
+
+    ids = ("ASTRO-01", "ASTRO-02", "ASTRO-03")
+    raws = list(islice(stream(seed=42, period_s=0, astronaut_ids=ids), 72))
+    assert [raw["astronaut_id"] for raw in raws] == list(ids) * 24
+    for offset, astronaut_id in enumerate(ids):
+        expected = [{**step.raw, "astronaut_id": astronaut_id}
+                    for step in scenario(seed=42 + offset)]
+        assert raws[offset::3] == expected
+    signatures = [[{k: v for k, v in raw.items() if k != "astronaut_id"}
+                   for raw in raws[offset::3]] for offset in range(3)]
+    assert signatures[0] != signatures[1] != signatures[2]
+
+
+@pytest.mark.parametrize("ids", [(), ("",), ("A", "A")])
+def test_crew_stream_rejects_empty_or_duplicate_ids(ids):
+    with pytest.raises(ValueError, match="astronaut_ids"):
+        next(stream(period_s=0, astronaut_ids=ids))
