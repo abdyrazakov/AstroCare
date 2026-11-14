@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 Consciousness = Literal["alert", "altered"]
+MissionPhase = Literal["PHASE_1_ACUTE_ADAPTATION", "PHASE_2_LONG_DURATION"]
 
 _CONSCIOUSNESS_VALUES: tuple[str, ...] = ("alert", "altered")
 
@@ -46,42 +47,54 @@ class VitalsSample:
     temp_c: float
     resp_rate: int
     radiation_dose_rate: float
-    exercise_minutes_today: int
-    required_exercise_minutes: int
-    caloric_intake: int
-    caloric_target: int
-    sleep_hours: float
-    mood_score: int
     on_supplemental_o2: bool = False
     consciousness: Consciousness = "alert"
     noaa_s_scale: int | None = None
     bfo_dose_30day_mgy_eq: float | None = None
     radiation_dose_career_msv: float | None = None
+    exercise_minutes_today: int | None = None
+    required_exercise_minutes: int | None = None
+    caloric_intake: int | None = None
+    caloric_target: int | None = None
+    sleep_hours: float | None = None
+    mood_score: int | None = None
+    mission_day: int | None = None
+    mission_phase: MissionPhase | None = None
+    cabin_ppco2_mmhg: float | None = None
+    iop_mmhg: float | None = None
+    hrv_rmssd_ms: float | None = None
+    pvt_slowest10_rt_ms: float | None = None
+    medical_kit: tuple[str, ...] | None = None
 
 
 # (field, min, max) — inclusive integer ranges.
-_INT_FIELDS: tuple[tuple[str, int, int], ...] = (
+_REQUIRED_INT_FIELDS: tuple[tuple[str, int, int], ...] = (
     ("hr", 0, 300),
     ("spo2", 0, 100),
     ("resp_rate", 0, 80),
-    ("exercise_minutes_today", 0, 1440),
-    ("required_exercise_minutes", 1, 1440),
-    ("caloric_intake", 0, 20000),
-    ("caloric_target", 1, 20000),
-    ("mood_score", 1, 10),
+)
+_OPTIONAL_INT_FIELDS: tuple[tuple[str, int, int], ...] = (
+    ("exercise_minutes_today", 0, 1440), ("required_exercise_minutes", 1, 1440),
+    ("caloric_intake", 0, 20000), ("caloric_target", 1, 20000), ("mood_score", 1, 10),
+    ("mission_day", 1, 3650),
 )
 
 # (field, min, max) — inclusive real-number ranges; ``None`` max means unbounded.
-_NUMBER_FIELDS: tuple[tuple[str, float, float | None], ...] = (
+_REQUIRED_NUMBER_FIELDS: tuple[tuple[str, float, float | None], ...] = (
     ("temp_c", 25.0, 45.0),
     ("radiation_dose_rate", 0.0, None),
-    ("sleep_hours", 0.0, 24.0),
+)
+_OPTIONAL_NUMBER_FIELDS: tuple[tuple[str, float, float | None], ...] = (
+    ("sleep_hours", 0.0, 24.0), ("cabin_ppco2_mmhg", 0.0, 20.0),
+    ("iop_mmhg", 0.0, 60.0), ("hrv_rmssd_ms", 0.0, 300.0),
+    ("pvt_slowest10_rt_ms", 100.0, 1000.0),
 )
 
 _OPTIONAL_DOSE_FIELDS = ("bfo_dose_30day_mgy_eq", "radiation_dose_career_msv")
 
 _BP_RANGE = (0, 300)
 _NOAA_RANGE = (0, 5)
+_MISSION_PHASES = ("PHASE_1_ACUTE_ADAPTATION", "PHASE_2_LONG_DURATION")
 
 
 # --------------------------------------------------------------------------- primitives
@@ -169,6 +182,30 @@ def _as_optional_noaa(value: object) -> int | None:
     return _as_int("noaa_s_scale", value, lo, hi)
 
 
+def _optional_ints(raw: Mapping[str, object]) -> dict[str, int | None]:
+    return {name: None if raw.get(name) is None else _as_int(name, raw[name], lo, hi)
+            for name, lo, hi in _OPTIONAL_INT_FIELDS}
+
+
+def _optional_numbers(raw: Mapping[str, object]) -> dict[str, float | None]:
+    return {name: None if raw.get(name) is None else _as_number(name, raw[name], lo, hi)
+            for name, lo, hi in _OPTIONAL_NUMBER_FIELDS}
+
+
+def _optional_pair(raw: Mapping[str, object], first: str, second: str) -> None:
+    present = raw.get(first) is not None, raw.get(second) is not None
+    if present[0] != present[1]:
+        raise ContractError(f"'{first}' and '{second}' must be provided together")
+
+
+def _medical_kit(value: object) -> tuple[str, ...] | None:
+    if value is None:
+        return None
+    if not isinstance(value, list) or any(not isinstance(item, str) or not item for item in value):
+        raise ContractError("'medical_kit' must be a list of non-empty strings or null")
+    return tuple(value)
+
+
 # --------------------------------------------------------------------------- entry point
 
 
@@ -180,15 +217,19 @@ def parse_sample(raw: object) -> VitalsSample:
     if not isinstance(raw, Mapping):
         raise ContractError(f"sample must be a JSON object, got {_type_name(raw)}")
 
-    ints = {name: _as_int(name, _require(raw, name), lo, hi) for name, lo, hi in _INT_FIELDS}
+    ints = {name: _as_int(name, _require(raw, name), lo, hi) for name, lo, hi in _REQUIRED_INT_FIELDS}
+    ints.update(_optional_ints(raw))
     numbers = {
-        name: _as_number(name, _require(raw, name), lo, hi) for name, lo, hi in _NUMBER_FIELDS
+        name: _as_number(name, _require(raw, name), lo, hi) for name, lo, hi in _REQUIRED_NUMBER_FIELDS
     }
-
-    optional_doses = {
-        name: None if raw.get(name) is None else _as_number(name, raw[name], 0.0, None)
-        for name in _OPTIONAL_DOSE_FIELDS
-    }
+    numbers.update(_optional_numbers(raw))
+    optional_doses = {name: None if raw.get(name) is None else _as_number(name, raw[name], 0.0, None)
+                      for name in _OPTIONAL_DOSE_FIELDS}
+    _optional_pair(raw, "exercise_minutes_today", "required_exercise_minutes")
+    _optional_pair(raw, "caloric_intake", "caloric_target")
+    phase = raw.get("mission_phase")
+    if phase is not None and (not isinstance(phase, str) or phase not in _MISSION_PHASES):
+        raise ContractError(f"'mission_phase' must be one of {_MISSION_PHASES}, got {phase!r}")
 
     return VitalsSample(
         timestamp=_as_non_empty_str("timestamp", _require(raw, "timestamp")),
@@ -197,6 +238,7 @@ def parse_sample(raw: object) -> VitalsSample:
         on_supplemental_o2=_as_bool("on_supplemental_o2", raw.get("on_supplemental_o2", False)),
         consciousness=_as_consciousness(raw.get("consciousness", "alert")),
         noaa_s_scale=_as_optional_noaa(raw.get("noaa_s_scale")),
+        mission_phase=phase, medical_kit=_medical_kit(raw.get("medical_kit")),
         **ints,
         **numbers,
         **optional_doses,

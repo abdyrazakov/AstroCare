@@ -34,17 +34,24 @@ JSON numbers; booleans are JSON `true`/`false` (never `0`/`1`).
 | `temp_c` | number | °C | 25 – 45 | yes | Core/body temperature. |
 | `resp_rate` | int | breaths/min | 0 – 80 | yes | Respiratory rate. |
 | `radiation_dose_rate` | number | µSv/h | ≥ 0 | yes | Current absorbed dose rate. ISS nominal background is ~0.2–0.5 mSv/day (≈8–21 µSv/h), episodes up to 1.2 mSv/day (≈50 µSv/h). |
-| `exercise_minutes_today` | int | min | 0 – 1440 | yes | Exercise completed so far today. |
-| `required_exercise_minutes` | int | min | 1 – 1440 | yes | Daily exercise target for this astronaut. |
-| `caloric_intake` | int | kcal | 0 – 20000 | yes | Calories consumed today. |
-| `caloric_target` | int | kcal | 1 – 20000 | yes | Daily caloric target. |
-| `sleep_hours` | number | h | 0 – 24 | yes | Sleep in the last sleep period. |
-| `mood_score` | int | — | 1 – 10 | yes | Self-reported mood, 10 = best. |
+| `exercise_minutes_today` | int or null | min | 0 – 1440 or null | no (paired with required_exercise_minutes) | Exercise completed so far today. |
+| `required_exercise_minutes` | int or null | min | 1 – 1440 or null | no (paired with exercise_minutes_today) | Daily exercise target for this astronaut. |
+| `caloric_intake` | int or null | kcal | 0 – 20000 or null | no (paired with caloric_target) | Calories consumed today. |
+| `caloric_target` | int or null | kcal | 1 – 20000 or null | no (paired with caloric_intake) | Daily caloric target. |
+| `sleep_hours` | number or null | h | 0 – 24 or null | no | Sleep in the last sleep period. |
+| `mood_score` | int or null | — | 1 – 10 or null | no | Self-reported mood, 10 = best. |
 | `on_supplemental_o2` | bool | — | `true` / `false` | no (default `false`) | Whether the astronaut is breathing supplemental oxygen (NEWS2 input). |
 | `consciousness` | string | — | `"alert"` \| `"altered"` | no (default `"alert"`) | Level of consciousness (NEWS2 input). |
 | `noaa_s_scale` | int or null | NOAA S-scale | 0 – 5 or `null` | no (default `null`) | Current NOAA Solar Radiation Storm scale, if known. |
 | `bfo_dose_30day_mgy_eq` | number or null | mGy-Eq | ≥ 0 or `null` | no (default `null`) | BFO dose equivalent over the last 30 days; absent or null disables this rule. |
 | `radiation_dose_career_msv` | number or null | mSv | ≥ 0 or `null` | no (default `null`) | Career effective dose; absent or null disables this rule. |
+| `mission_day` | int or null | day | 1–3650 or null | no | ASTRALIS mission day. |
+| `mission_phase` | string or null | — | `PHASE_1_ACUTE_ADAPTATION` or `PHASE_2_LONG_DURATION` | no | ASTRALIS phase. |
+| `cabin_ppco2_mmhg` | number or null | mmHg | 0–20 or null | no | Cabin CO₂ partial pressure. |
+| `iop_mmhg` | number or null | mmHg | 0–60 or null | no | Intraocular pressure. |
+| `hrv_rmssd_ms` | number or null | ms | 0–300 or null | no | Passthrough HRV RMSSD. |
+| `pvt_slowest10_rt_ms` | number or null | ms | 100–1000 or null | no | PVT-B slowest 10% reaction time. |
+| `medical_kit` | array of strings or null | — | list or null | no | Validated onboard-kit codes; passed through as `medicalKit`. |
 
 Type rules (enforced):
 
@@ -165,6 +172,8 @@ One output object per processed input sample. Keys are **camelCase**.
 | `likelyConditions` | array of object | **Experimental in v0.2:** condition names and weights are pending confirmation by the team's researcher; the field may change at the contract v0.2 freeze. UI must tolerate an empty list and unknown codes. Ranked IMM-lite condition candidates, most likely first. One entry is `{code, label, confidence, drivers, evidenceRef}`: `confidence` is an evidence score in 0–1 (two decimals, **not** a calibrated probability), `drivers` are the active flag codes that contributed, `evidenceRef` points to `docs/EVIDENCE.md`. At most 3 entries; empty when nothing reaches the floor. Never a diagnosis. |
 | `doctorRecommendation` | string | 2–4 sentences of plain-language guidance for the crew. Always present, even at green. |
 | `doctorSource` | `"llm"` \| `"cache"` \| `"fallback"` | Where the recommendation came from: live language model, a cached answer for an identical flag set, or a built-in rule-based text when the model is unavailable. Presentation may show this as a small badge; it does not change how the text should be displayed. |
+| `bodySystems` | object | All 16 AstroCare zone IDs mapped to `green`/`yellow`/`red`; worst mapped severity wins. |
+| `medicalKit` | array of string | Optional validated onboard-kit codes, passed through unchanged. |
 
 ### Flag codes
 
@@ -197,6 +206,10 @@ NEWS2 components score 0–3 each. A component flag is emitted when **that compo
 | `CALORIC_DEFICIT` | red | `caloric_intake < 80 %` of `caloric_target` (NASA red operating band). |
 | `SLEEP_DEFICIT` | yellow | `sleep_hours < 6`. |
 | `LOW_MOOD` | yellow | `mood_score ≤ 4`. |
+| `CABIN_CO2_ELEVATED` | yellow | `cabin_ppco2_mmhg ≥ 3.0`. |
+| `CABIN_CO2_HIGH` | red | `cabin_ppco2_mmhg ≥ 7.6`; replaces elevated. |
+| `PVT_SLOW` | yellow | `pvt_slowest10_rt_ms > 500`. |
+| `IOP_HIGH` | yellow | `iop_mmhg > 21`. |
 
 Reference: ISS nominal background radiation is ~0.2–0.5 mSv/day (≈8–21 µSv/h), episodes up to 1.2 mSv/day (≈50 µSv/h), so a nominal sample should never
 trigger a radiation flag.
@@ -281,6 +294,10 @@ not the production transport.
 
 ---
 
+### Body systems and WebSocket
+
+Every output includes `bodySystems` with all 16 frontend zone IDs, defaulting to `green`; the worst mapped flag severity wins and a likely condition with confidence ≥ 0.5 contributes at least `yellow`. This mapping is a design decision aligned to the AstroCare frontend. With `--ws-port 8787`, the dashboard broadcasts AstroCare `BrainTick` JSON over `ws://localhost:8787` after each successful process.
+
 ## 5. Change policy
 
 - Both contracts are **fixed by the orchestrator**. Neither team changes a field name, type,
@@ -290,7 +307,7 @@ not the production transport.
 - The data team **must announce** any format change before shipping it, and **must never
   silently change** units, key names or ranges. Adding an extra key is allowed without
   announcement (it is ignored), but it will not be used until the contract is updated.
-- Version of this contract: `astro-brain 0.2.1`.
+- Version of this contract: `astro-brain 0.3.0`.
 
 ---
 
@@ -302,7 +319,8 @@ not the production transport.
 | `scoring-agent` | `src/astro_brain/news2.py`, `src/astro_brain/radiation.py`, `src/astro_brain/lifestyle.py`, `src/astro_brain/vitals_flags.py`, `src/astro_brain/scoring.py`, `src/astro_brain/conditions.py` (NEWS2 + all flag rules and IMM-lite conditions from section 3) and their tests. |
 | `doctor-agent` | `src/astro_brain/doctor/` (`__init__.py`, `layer.py`, `fallback.py`, `ollama_client.py`, `prompts.py` — recommendation text: llm / cache / fallback) and its tests, `src/astro_brain/pipeline.py` (`Brain`). |
 | `brain-qa-agent` | `src/astro_brain/mock.py`, `src/astro_brain/qa.py`, `examples/`, end-to-end tests, mock sample generators, contract conformance checks. |
-| `dashboard-agent` | `src/astro_brain/dashboard.py` (HTTP `POST /ingest`, `GET /state` on port 8765) and its tests. |
+| `dashboard-agent` | `src/astro_brain/dashboard.py`, `src/astro_brain/ws_server.py` and their tests. |
+| `adapters-agent` | `src/astro_brain/adapters/`, `src/astro_brain/feed_astralis.py`, `docs/INTEGRATION.md` and adapter tests. |
 
 All agents: stdlib only, work inside this repository, respect the two contracts above, and
 **do not touch the data pipeline or the presentation UI** — those belong to the other teams.

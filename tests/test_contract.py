@@ -8,8 +8,7 @@ from astro_brain.contract import BloodPressure, ContractError, VitalsSample, par
 
 REQUIRED_FIELDS = (
     "timestamp", "astronaut_id", "hr", "spo2", "bp", "temp_c", "resp_rate",
-    "radiation_dose_rate", "exercise_minutes_today", "required_exercise_minutes",
-    "caloric_intake", "caloric_target", "sleep_hours", "mood_score",
+    "radiation_dose_rate",
 )
 
 

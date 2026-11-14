@@ -45,11 +45,14 @@ from .contract import ContractError
 from .doctor.layer import DoctorLayer
 from .doctor.ollama_client import OllamaClient
 from .pipeline import Brain
+from .adapters.frontend import to_brain_tick
+from .ws_server import BrainWebSocketServer
 
 HISTORY_LIMIT = 50
 # Read-only: shared across request threads, so it must never be mutated in place.
 NO_DATA = types.MappingProxyType({"status": "no data yet"})
 DEFAULT_PORT = 8765
+DEFAULT_WS_PORT = 8787
 DEFAULT_PERIOD_S = 2.0
 DEFAULT_SEED = 42
 DEFAULT_CREW = 1
@@ -115,6 +118,8 @@ class _Handler(BaseHTTPRequestHandler):
     brain: Brain
     store: StateStore
     verbose: bool
+    ws: BrainWebSocketServer | None
+    seq: list[int]
     server_version = "AstroBrainDashboard/0.1"
 
     def log_message(self, format: str, *args: Any) -> None:  # noqa: A002
@@ -201,17 +206,22 @@ class _Handler(BaseHTTPRequestHandler):
             return
 
         self.store.update(output, _doctor_stats_of(self.brain))
+        if self.ws is not None:
+            self.ws.broadcast(to_brain_tick(output, payload, self.seq[0])); self.seq[0] += 1
         self._send_json(200, output)
 
 
-def make_handler(brain: Brain, store: StateStore, *, verbose: bool = False) -> type:
+def make_handler(brain: Brain, store: StateStore, *, verbose: bool = False,
+                 ws: BrainWebSocketServer | None = None, seq: list[int] | None = None) -> type:
     """Bind one handler class to a server's brain and store."""
-    return type("Handler", (_Handler,), {"brain": brain, "store": store, "verbose": verbose})
+    return type("Handler", (_Handler,), {"brain": brain, "store": store, "verbose": verbose,
+                                         "ws": ws, "seq": seq or [0]})
 
 
-def build_server(port: int, brain: Brain, store: StateStore, *, verbose: bool = False) -> ThreadingHTTPServer:
+def build_server(port: int, brain: Brain, store: StateStore, *, verbose: bool = False,
+                 ws: BrainWebSocketServer | None = None, seq: list[int] | None = None) -> ThreadingHTTPServer:
     """Build a ``ThreadingHTTPServer`` bound to ``localhost:port`` (``port=0`` picks a free one)."""
-    handler_cls = make_handler(brain, store, verbose=verbose)
+    handler_cls = make_handler(brain, store, verbose=verbose, ws=ws, seq=seq)
     return ThreadingHTTPServer(("localhost", port), handler_cls)
 
 
@@ -244,6 +254,7 @@ def _ollama_up_down(brain: Brain) -> str:
 
 def _simulate_loop(
     brain: Brain, store: StateStore, seed: int, period_s: float, *,
+    ws: BrainWebSocketServer | None = None, seq: list[int] | None = None,
     verbose: bool = False, astronaut_ids: tuple[str, ...] = ("ASTRO-01",),
 ) -> None:
     """Daemon-thread target: feed ``mock.stream`` samples into ``store`` via ``brain`` forever.
@@ -265,6 +276,8 @@ def _simulate_loop(
                 print(f"simulate: skipped sample: {exc!r}", file=sys.stderr)
             continue
         store.update(output, _doctor_stats_of(brain))
+        if ws is not None and seq is not None:
+            ws.broadcast(to_brain_tick(output, raw, seq[0])); seq[0] += 1
 
 
 def _parse_args(argv: list[str] | None) -> argparse.Namespace:
@@ -278,6 +291,7 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument("--period", type=float, default=DEFAULT_PERIOD_S)
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
     parser.add_argument("--verbose", action="store_true")
+    parser.add_argument("--ws-port", type=int, default=DEFAULT_WS_PORT)
     parser.add_argument(
         "--offline",
         action="store_true",
@@ -286,31 +300,36 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def _startup_line(server: ThreadingHTTPServer, brain: Brain, simulate: bool) -> str:
+def _startup_line(server: ThreadingHTTPServer, brain: Brain, simulate: bool, ws: BrainWebSocketServer | None) -> str:
     doctor_label = "live" if _doctor_is_enabled(brain) else "offline"
     status = [f"simulate={simulate}", f"doctor={doctor_label}"]
     if doctor_label == "live":
         status.append(f"ollama={_ollama_up_down(brain)}")
-    return f"astro-brain dashboard listening on http://localhost:{server.server_port} ({' '.join(status)})"
+    ws_text = f" ws=ws://localhost:{ws.port}" if ws is not None else ""
+    return f"astro-brain dashboard listening on http://localhost:{server.server_port}{ws_text} ({' '.join(status)})"
 
 
 def main(argv: list[str] | None = None) -> None:
     args = _parse_args(argv)
     brain = build_brain(offline=args.offline)
     store = StateStore()
-    server = build_server(args.port, brain, store, verbose=args.verbose)
+    ws = BrainWebSocketServer(port=args.ws_port) if args.ws_port else None
+    if ws is not None: ws.start()
+    seq = [0]
+    server = build_server(args.port, brain, store, verbose=args.verbose, ws=ws, seq=seq)
 
     if args.simulate:
         thread = threading.Thread(
             target=_simulate_loop,
             args=(brain, store, args.seed, args.period),
             kwargs={"verbose": args.verbose,
+                    "ws": ws, "seq": seq,
                     "astronaut_ids": tuple(f"ASTRO-{i:02d}" for i in range(1, args.crew + 1))},
             daemon=True,
         )
         thread.start()
 
-    print(_startup_line(server, brain, args.simulate), flush=True)
+    print(_startup_line(server, brain, args.simulate, ws), flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
@@ -318,6 +337,7 @@ def main(argv: list[str] | None = None) -> None:
     finally:
         server.shutdown()
         server.server_close()
+        if ws is not None: ws.close()
 
 
 if __name__ == "__main__":

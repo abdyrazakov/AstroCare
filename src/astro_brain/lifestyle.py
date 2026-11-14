@@ -9,14 +9,19 @@ from astro_brain.flags import Flag
 # Operational cutoffs; source limitations are recorded in docs/EVIDENCE.md.
 EXERCISE_DEFICIT_RATIO = 0.5
 # JSC-63555 Energy intake operating bands; VERIFIED (docs/EVIDENCE.md).
-CALORIC_LOW_RATIO = 0.80
-CALORIC_DEFICIT_RATIO = CALORIC_LOW_RATIO
-CALORIC_GREEN_RATIO = 0.90
+CALORIC_RED_BAND_RATIO = 0.80
+CALORIC_YELLOW_BAND_RATIO = 0.90
+# Compatibility aliases retained for v0.2 imports.
+CALORIC_LOW_RATIO = CALORIC_RED_BAND_RATIO
+CALORIC_DEFICIT_RATIO = CALORIC_RED_BAND_RATIO
+CALORIC_GREEN_RATIO = CALORIC_YELLOW_BAND_RATIO
 SLEEP_DEFICIT_HOURS = 6.0
 LOW_MOOD_MAX = 4
 
 
 def _exercise_deficit_flag(sample: VitalsSample) -> Flag | None:
+    if sample.exercise_minutes_today is None or sample.required_exercise_minutes is None:
+        return None
     threshold = EXERCISE_DEFICIT_RATIO * sample.required_exercise_minutes
     if sample.exercise_minutes_today >= threshold:
         return None
@@ -35,11 +40,13 @@ def _exercise_deficit_flag(sample: VitalsSample) -> Flag | None:
 
 
 def _caloric_flags(sample: VitalsSample) -> tuple[Flag, ...]:
+    if sample.caloric_intake is None or sample.caloric_target is None:
+        return ()
     ratio = sample.caloric_intake / sample.caloric_target
-    if ratio < CALORIC_LOW_RATIO:
-        code, severity, band, threshold = "CALORIC_DEFICIT", "red", "red", CALORIC_LOW_RATIO
-    elif ratio < CALORIC_GREEN_RATIO:
-        code, severity, band, threshold = "CALORIC_LOW", "yellow", "yellow", CALORIC_LOW_RATIO
+    if ratio < CALORIC_RED_BAND_RATIO:
+        code, severity, band, threshold = "CALORIC_DEFICIT", "red", "red", CALORIC_RED_BAND_RATIO
+    elif ratio < CALORIC_YELLOW_BAND_RATIO:
+        code, severity, band, threshold = "CALORIC_LOW", "yellow", "yellow", CALORIC_YELLOW_BAND_RATIO
     else:
         return ()
     message = (
@@ -52,6 +59,8 @@ def _caloric_flags(sample: VitalsSample) -> tuple[Flag, ...]:
 
 
 def _sleep_deficit_flag(sample: VitalsSample) -> Flag | None:
+    if sample.sleep_hours is None:
+        return None
     if sample.sleep_hours >= SLEEP_DEFICIT_HOURS:
         return None
     message = f"Only {sample.sleep_hours:g} h of sleep; minimum is {SLEEP_DEFICIT_HOURS:g} h."
@@ -65,6 +74,8 @@ def _sleep_deficit_flag(sample: VitalsSample) -> Flag | None:
 
 
 def _low_mood_flag(sample: VitalsSample) -> Flag | None:
+    if sample.mood_score is None:
+        return None
     if sample.mood_score > LOW_MOOD_MAX:
         return None
     message = f"Mood score {sample.mood_score} is at or below the low-mood threshold of {LOW_MOOD_MAX}."

@@ -32,6 +32,10 @@ TRIGGERS = {
     "CALORIC_LOW": {"caloric_intake": 2400},
     "SLEEP_DEFICIT": {"sleep_hours": 4},
     "LOW_MOOD": {"mood_score": 3},
+    "CABIN_CO2_ELEVATED": {"cabin_ppco2_mmhg": 3.0},
+    "CABIN_CO2_HIGH": {"cabin_ppco2_mmhg": 7.6},
+    "PVT_SLOW": {"pvt_slowest10_rt_ms": 501},
+    "IOP_HIGH": {"iop_mmhg": 22},
 }
 
 
@@ -53,7 +57,7 @@ def test_assess_and_pipeline_have_evidence_for_each_flag(code, overrides):
 def test_evidence_mapping_and_document_cover_all_twenty_codes():
     from astro_brain.evidence import EVIDENCE_BY_CODE
 
-    assert len(EVIDENCE_BY_CODE) == 21
+    assert len(EVIDENCE_BY_CODE) == 25
     assert set(EVIDENCE_BY_CODE) == set(TRIGGERS)
     document = Path(__file__).resolve().parents[1] / "docs" / "EVIDENCE.md"
     rows = {line.split("|")[1].strip().strip("`") for line in document.read_text().splitlines()

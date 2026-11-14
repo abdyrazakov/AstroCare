@@ -57,6 +57,7 @@ CONTRACT_OUTPUT_KEYS = {
     "likelyConditions",
     "doctorRecommendation",
     "doctorSource",
+    "bodySystems",
 }
 
 

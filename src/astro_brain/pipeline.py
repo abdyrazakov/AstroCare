@@ -18,6 +18,7 @@ from typing import Any, Protocol
 from .contract import parse_sample
 from .doctor.layer import DoctorLayer, Recommendation
 from .doctor.ollama_client import OllamaClient
+from .body_map import body_systems
 
 _ENV_OLLAMA_URL = "ASTRO_OLLAMA_URL"
 _ENV_OLLAMA_MODEL = "ASTRO_OLLAMA_MODEL"
@@ -41,14 +42,17 @@ class _AssessmentLike(Protocol):
 
 def to_output(assessment: _AssessmentLike, recommendation: Recommendation) -> dict[str, Any]:
     """Build the exact camelCase output-contract dict described in AGENTS.md section 3."""
+    flag_details = [flag.to_dict() for flag in assessment.flags]
+    conditions = [condition.to_dict() for condition in assessment.likely_conditions]
     return {
         "timestamp": assessment.timestamp,
         "astronautId": assessment.astronaut_id,
         "alertLevel": assessment.alert_level,
         "news2Score": assessment.news2_total,
         "activeFlags": [flag.code for flag in assessment.flags],
-        "flagDetails": [flag.to_dict() for flag in assessment.flags],
-        "likelyConditions": [condition.to_dict() for condition in assessment.likely_conditions],
+        "flagDetails": flag_details,
+        "likelyConditions": conditions,
+        "bodySystems": body_systems(flag_details, conditions),
         "doctorRecommendation": recommendation.text,
         "doctorSource": recommendation.source,
     }
@@ -84,4 +88,10 @@ class Brain:
         sample = parse_sample(raw)
         assessment = assess(sample)
         recommendation = self._doctor.recommend(assessment)
-        return to_output(assessment, recommendation)
+        output = to_output(assessment, recommendation)
+        for source, target in (("mission_day", "missionDay"), ("mission_phase", "missionPhase"),
+                               ("medical_kit", "medicalKit")):
+            value = getattr(sample, source)
+            if value is not None:
+                output[target] = list(value) if source == "medical_kit" else value
+        return output
