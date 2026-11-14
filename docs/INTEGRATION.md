@@ -28,3 +28,5 @@ curl -X POST localhost:8765/ask -H 'Content-Type: application/json' \
 ```
 
 The frontend AI Assistant tab may call this HTTP endpoint directly.
+
+Mission history is available at `/log?astronaut_id=ASTRO-01` and `/report?astronaut_id=ASTRO-01`; append `format=text` for an SBAR summary.

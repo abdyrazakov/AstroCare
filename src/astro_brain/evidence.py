@@ -11,7 +11,8 @@ CALORIC_REF = "JSC-63555 Energy intake operating bands; 80/90% cutoffs — VERIF
 CALORIC_LOW_REF = "JSC-63555 Energy intake operating bands; 80–90% yellow — VERIFIED"
 EXERCISE_REF = "NASA SP-20250000273; NTRS 20110016265; 50% cutoff DESIGN DECISION"
 MOOD_REF = "Subjective 1–10 mood scale, unvalidated — DESIGN DECISION"
-CO2_ELEVATED_REF = "Law et al. 2014, AsMA; OCHMO-TB-004 — VERIFY"
+PHQ2_REF = "Kroenke et al. 2003, J Gen Intern Med 41(11):1284–92 — VERIFIED"
+CO2_ELEVATED_REF = "NASA-STD-3001 Rev C [V2 6004], 1-hour average — VERIFIED"
 CO2_HIGH_REF = "ISS Flight Rule B17-5 / OCHMO-TB-004 — VERIFY"
 PVT_REF = "Basner & Dinges PVT-B lapse convention — VERIFY"
 IOP_REF = "OCHMO/HRP SANS ocular hypertension context — VERIFY"
@@ -45,6 +46,7 @@ EVIDENCE_BY_CODE = MappingProxyType({
     "CALORIC_LOW": CALORIC_LOW_REF,
     "SLEEP_DEFICIT": SLEEP_REF,
     "LOW_MOOD": MOOD_REF,
+    "PHQ2_POSITIVE": PHQ2_REF,
     "CABIN_CO2_ELEVATED": CO2_ELEVATED_REF,
     "CABIN_CO2_HIGH": CO2_HIGH_REF,
     "PVT_SLOW": PVT_REF,

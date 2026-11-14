@@ -180,8 +180,10 @@ class DoctorLayer:
             return {"answer": text, "source": "llm", "disclaimer": disclaimer}
         except Exception:
             flags = ", ".join(str(item.get("code")) for item in context.get("flagDetails", []) if isinstance(item, dict))
-            actions = " ".join(str(item) for item in context.get("doctorRecommendation", "").split("."))
-            answer = f"Model unavailable. Current status: {context.get('alertLevel', 'unknown')}. Active flags: {flags or 'none'}. Suggested actions: {actions}".replace("  ", " ")
+            actions = ". ".join(item.strip() for item in str(context.get("doctorRecommendation", "")).split(".") if item.strip())
+            if actions and not actions.endswith("."):
+                actions += "."
+            answer = f"Model unavailable. Current status: {context.get('alertLevel', 'unknown')}. Active flags: {flags or 'none'}. Suggested actions: {actions}"
             return {"answer": answer, "source": "fallback", "disclaimer": disclaimer}
 
     # ----------------------------------------------------------------- internals

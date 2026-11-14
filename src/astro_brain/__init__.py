@@ -5,4 +5,4 @@ The package validates incoming vitals samples against the fixed input contract
 and is extended by the scoring, doctor and pipeline modules owned by other agents.
 """
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"

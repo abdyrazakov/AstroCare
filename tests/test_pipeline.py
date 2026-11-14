@@ -58,6 +58,7 @@ CONTRACT_OUTPUT_KEYS = {
     "doctorRecommendation",
     "doctorSource",
     "bodySystems",
+    "plans",
 }
 
 

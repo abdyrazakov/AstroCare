@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import threading
 import types
@@ -47,6 +48,7 @@ from .doctor.ollama_client import OllamaClient
 from .pipeline import Brain
 from .adapters.frontend import to_brain_tick
 from .ws_server import BrainWebSocketServer
+from .mission_log import MissionLog
 
 HISTORY_LIMIT = 50
 # Read-only: shared across request threads, so it must never be mutated in place.
@@ -73,6 +75,7 @@ class StateStore:
         self._latest_by_id: dict[str, dict[str, Any]] = {}
         self._history_by_id: dict[str, deque[dict[str, Any]]] = {}
         self._doctor_stats: dict[str, int] = {}
+        self.mission_log = MissionLog()
 
     def update(self, output: dict[str, Any], doctor_stats: dict[str, int]) -> None:
         astronaut_id = output["astronautId"]
@@ -85,6 +88,7 @@ class StateStore:
             )
             history.append(output)
             self._doctor_stats = dict(doctor_stats)
+            self.mission_log.record(output)
 
     def latest(self, astronaut_id: str | None = None) -> dict[str, Any] | None:
         with self._lock:
@@ -146,6 +150,7 @@ class _Handler(BaseHTTPRequestHandler):
         routes = {
             "/": self._handle_root, "/state": self._handle_state,
             "/state/all": self._handle_all, "/history": self._handle_history,
+            "/log": self._handle_log, "/report": self._handle_report,
         }
         handler = routes.get(urlsplit(self.path).path)
         if handler is None:
@@ -194,6 +199,25 @@ class _Handler(BaseHTTPRequestHandler):
 
     def _handle_history(self) -> None:
         self._send_json(200, self.store.history(self._astronaut_id()))
+
+    def _handle_log(self) -> None:
+        payload = self.store.mission_log.episodes(self._astronaut_id())
+        self._send_json(200, payload)
+
+    def _handle_report(self) -> None:
+        astronaut_id = self._astronaut_id()
+        if astronaut_id is None:
+            self._send_json(400, {"error": "astronaut_id is required"})
+            return
+        report = self.store.mission_log.report(astronaut_id)
+        if report is None:
+            self._send_json(404, {"error": "no data for astronaut", "astronautId": astronaut_id})
+            return
+        query = parse_qs(urlsplit(self.path).query)
+        if query.get("format", [""])[0] == "text":
+            self._send_text(200, self.store.mission_log.report_text(astronaut_id) or "")
+        else:
+            self._send_json(200, report)
 
     def _read_json_body(self) -> Any:
         try:
@@ -244,7 +268,11 @@ class _Handler(BaseHTTPRequestHandler):
             self._send_json(404, {"error": "no data for astronaut", "astronautId": astronaut_id})
             return
         doctor = getattr(self.brain, "_doctor", None)
-        response = doctor.ask(context, question, timeout_s=30.0)
+        try:
+            timeout_s = float(os.environ.get("ASTRO_ASK_TIMEOUT_S", "30"))
+        except ValueError:
+            timeout_s = 30.0
+        response = doctor.ask(context, question, timeout_s=timeout_s)
         response["contextTimestamp"] = str(context.get("timestamp", ""))
         self._send_json(200, response)
 

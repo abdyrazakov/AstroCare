@@ -7,7 +7,7 @@ immutable ``Assessment``. No I/O.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from astro_brain.conditions import LikelyCondition, likely_conditions
 from astro_brain.contract import VitalsSample
@@ -31,6 +31,7 @@ class Assessment:
     news2_components: Mapping[str, int]
     flags: tuple[Flag, ...]
     likely_conditions: tuple[LikelyCondition, ...]
+    plans: Mapping[str, object] = field(default_factory=dict)
 
     def flag_codes(self) -> tuple[str, ...]:
         """Sorted, unique codes of all active flags."""

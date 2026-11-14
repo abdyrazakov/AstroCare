@@ -58,6 +58,7 @@ class VitalsSample:
     caloric_target: int | None = None
     sleep_hours: float | None = None
     mood_score: int | None = None
+    phq2_score: int | None = None
     mission_day: int | None = None
     mission_phase: MissionPhase | None = None
     cabin_ppco2_mmhg: float | None = None
@@ -75,7 +76,7 @@ _REQUIRED_INT_FIELDS: tuple[tuple[str, int, int], ...] = (
 )
 _OPTIONAL_INT_FIELDS: tuple[tuple[str, int, int], ...] = (
     ("exercise_minutes_today", 0, 1440), ("required_exercise_minutes", 1, 1440),
-    ("caloric_intake", 0, 20000), ("caloric_target", 1, 20000), ("mood_score", 1, 10),
+    ("caloric_intake", 0, 20000), ("caloric_target", 1, 20000), ("mood_score", 1, 10), ("phq2_score", 0, 6),
     ("mission_day", 1, 3650),
 )
 

@@ -66,7 +66,7 @@ def to_brain_tick(output: Mapping[str, Any], raw_input: Mapping[str, Any], seq: 
               "rawVitals": vitals, "doctorRecommendation": output["doctorRecommendation"], "seq": seq,
               "astronautId": output.get("astronautId", raw_input.get("astronaut_id")),
               "steps": _steps(output["doctorRecommendation"]), **{key: output[key] for key in
-              ("likelyConditions", "bodySystems", "news2Score", "flagDetails", "doctorSource") if key in output}}
+              ("likelyConditions", "bodySystems", "news2Score", "flagDetails", "doctorSource", "plans") if key in output}}
     if raw_input.get("mission_day") is not None: result["missionDay"] = raw_input["mission_day"]
     if raw_input.get("radiation_dose_career_msv") is not None:
         result["radiation_cumulative_msv"] = raw_input["radiation_dose_career_msv"]

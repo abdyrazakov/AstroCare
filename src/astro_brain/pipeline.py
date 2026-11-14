@@ -21,6 +21,7 @@ from .contract import parse_sample
 from .doctor.layer import DoctorLayer, Recommendation
 from .doctor.ollama_client import OllamaClient
 from .body_map import body_systems
+from .plans import build_plans
 from .hysteresis import apply_hysteresis, update_memory
 from dataclasses import replace
 
@@ -57,6 +58,7 @@ def to_output(assessment: _AssessmentLike, recommendation: Recommendation) -> di
         "flagDetails": flag_details,
         "likelyConditions": conditions,
         "bodySystems": body_systems(flag_details, conditions),
+        "plans": getattr(assessment, "plans", {}),
         "doctorRecommendation": recommendation.text,
         "doctorSource": recommendation.source,
     }
@@ -116,6 +118,7 @@ class Brain:
                 alert_level=alert_level_from_flags(held_flags),
                 likely_conditions=likely_conditions(held_flags, sample.mission_phase, sample.medical_kit),
             )
+        assessment = replace(assessment, plans=build_plans(sample, assessment))
         recommendation = self._doctor.recommend(assessment)
         output = to_output(assessment, recommendation)
         for source, target in (("mission_day", "missionDay"), ("mission_phase", "missionPhase"),

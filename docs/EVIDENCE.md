@@ -55,10 +55,12 @@ they do not turn operational prototype cutoffs into validated clinical rules.
 | NEWS2 spaceflight validation | no validation found | RCP NEWS2 2017 | Recommendations; §3 | NOT FOUND | Terrestrial adult acute-illness tool; no astronaut/microgravity validation found. |
 | CALORIC_LOW | 80–90% of EER | JSC-63555 (2005) | Energy intake operating bands | VERIFIED | Yellow operating band. |
 | RESPIRATORY_INFECTION_LOWER | EMCL lower respiratory tract infection | EMCL Table 2 | Table 2 | VERIFIED | Weights are prototype. |
-| CABIN_CO2_ELEVATED | ≥3.0 mmHg | Law et al. 2014, AsMA; OCHMO context | Long-duration ISS symptoms | VERIFY | Operational threshold pending direct source review. |
+| CABIN_CO2_ELEVATED | ≥3.0 mmHg | NASA-STD-3001 Rev C [V2 6004] | 1-hour average | VERIFIED | Threshold source supplied by audit. |
 | CABIN_CO2_HIGH | ≥7.6 mmHg | ISS Flight Rule B17-5 / OCHMO-TB-004 | Flight rule section | VERIFY | Operational red threshold pending document review. |
 | PVT_SLOW | >500 ms | Basner & Dinges PVT-B | Lapse convention | VERIFY | PVT lapse threshold; spaceflight applicability pending. |
 | IOP_HIGH | >21 mmHg | OCHMO/HRP SANS context | Ocular hypertension | VERIFY | Common screening boundary; astronaut threshold pending. |
+| PHQ2_POSITIVE | ≥3 | Kroenke et al. 2003, J Gen Intern Med | 41(11):1284–92 | VERIFIED | Screening flag; not a diagnosis. |
+| daily plans | exercise/nutrition plan bands | NASA SP-20250000273; NTRS 20110016265; JSC-63555 | VERIFY | DESIGN DECISION | Operational plan generation pending mission-specific review. |
 | HYPERCAPNIA | weighted prototype | NASA OCHMO-TB-004 / Law et al. 2014 | VERIFY | VERIFY | Condition name not confirmed in EMCL. |
 | SANS | weighted prototype | NASA HRP Risk of SANS | VERIFY | VERIFY | EMCL name “VIIP” not confirmed. |
 | IMM phase priors | listed multipliers | Researcher incidence table pending | phase_priors.py | DESIGN DECISION | Replace when phase frequencies are supplied. |

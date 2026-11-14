@@ -155,6 +155,7 @@ CONDITION_RULES: tuple[ConditionRule, ...] = (
         saturation=0.9,
         weights=(
             ("LOW_MOOD", 0.65),
+            ("PHQ2_POSITIVE", 0.70),
             ("SLEEP_DEFICIT", 0.20),
             ("EXERCISE_DEFICIT", 0.10),
         ),

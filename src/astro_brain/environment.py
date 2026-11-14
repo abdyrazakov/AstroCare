@@ -6,7 +6,7 @@ from astro_brain.contract import VitalsSample
 from astro_brain.evidence import EVIDENCE_BY_CODE
 from astro_brain.flags import Flag
 
-CABIN_CO2_ELEVATED_MMHG = 3.0  # Law et al. 2014 / OCHMO context; VERIFY.
+CABIN_CO2_ELEVATED_MMHG = 3.0  # NASA-STD-3001 Rev C [V2 6004], 1-hour average; VERIFIED.
 CABIN_CO2_HIGH_MMHG = 7.6  # ISS Flight Rule B17-5 / OCHMO-TB-004; VERIFY.
 
 

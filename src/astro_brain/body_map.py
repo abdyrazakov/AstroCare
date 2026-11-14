@@ -27,7 +27,7 @@ def zones_for_flag(code: str) -> tuple[str, ...]:
     if code.startswith(("HR_", "BP_")): return ("heart",)
     if code.startswith(("SPO2_", "RESP_", "CABIN_CO2_")): return ("lungs",)
     if code.startswith("TEMP_"): return ("skin_immune",)
-    if code in {"CONSCIOUSNESS_ALTERED", "PVT_SLOW", "SLEEP_DEFICIT", "LOW_MOOD"}: return ("brain",)
+    if code in {"CONSCIOUSNESS_ALTERED", "PVT_SLOW", "SLEEP_DEFICIT", "LOW_MOOD", "PHQ2_POSITIVE"}: return ("brain",)
     if code == "IOP_HIGH": return ("eyes",)
     if code == "HYPERCAPNIA": return ("lungs", "brain")
     if code == "SANS": return ("eyes", "brain")

@@ -38,6 +38,7 @@ CONTRACT_OUTPUT_KEYS: frozenset[str] = frozenset(
         "doctorSource",
         "bodySystems",
         "medicalKit",
+        "plans",
     }
 )
 

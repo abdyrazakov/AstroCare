@@ -44,6 +44,7 @@ def build_user_prompt(assessment: _AssessmentLike) -> str:
         "likelyConditions": [
             condition.to_dict() for condition in getattr(assessment, "likely_conditions", ())
         ],
+        "plans": getattr(assessment, "plans", {}),
     }
     codes = ", ".join(flag.code for flag in assessment.flags)
     return f"Flags to address (all of them): {codes}\n" + json.dumps(

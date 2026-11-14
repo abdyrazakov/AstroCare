@@ -88,6 +88,17 @@ def _low_mood_flag(sample: VitalsSample) -> Flag | None:
     )
 
 
+def _phq2_flag(sample: VitalsSample) -> Flag | None:
+    if sample.phq2_score is None or sample.phq2_score < 3:
+        return None
+    return Flag(
+        code="PHQ2_POSITIVE", severity="yellow",
+        message=f"PHQ-2 score {sample.phq2_score} meets the positive screening threshold; arrange a supportive follow-up.",
+        value=sample.phq2_score, threshold=3,
+        evidence=EVIDENCE_BY_CODE["PHQ2_POSITIVE"],
+    )
+
+
 def lifestyle_flags(sample: VitalsSample) -> tuple[Flag, ...]:
     """All active lifestyle flags for ``sample``, in a fixed order."""
     candidates = (
@@ -95,5 +106,6 @@ def lifestyle_flags(sample: VitalsSample) -> tuple[Flag, ...]:
         *_caloric_flags(sample),
         _sleep_deficit_flag(sample),
         _low_mood_flag(sample),
+        _phq2_flag(sample),
     )
     return tuple(flag for flag in candidates if flag is not None)

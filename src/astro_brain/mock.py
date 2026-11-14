@@ -130,6 +130,8 @@ ANOMALIES: Mapping[str, Anomaly] = {
                  conditions=("SLEEP_DISORDER",)),
         _anomaly("low_mood", {"mood_score": 3}, "yellow", "LOW_MOOD",
                  conditions=("DEPRESSION",)),
+        _anomaly("phq2_positive", {"phq2_score": 4}, "yellow", "PHQ2_POSITIVE",
+                 conditions=("DEPRESSION",)),
         _anomaly("caloric_deficit", {"caloric_intake": 1500}, "red", "CALORIC_DEFICIT",
                  conditions=("NUTRITIONAL_DEFICIT",)),
         _anomaly("caloric_low", {"caloric_intake": 2400}, "yellow", "CALORIC_LOW"),
