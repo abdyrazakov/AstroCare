@@ -43,6 +43,8 @@ JSON numbers; booleans are JSON `true`/`false` (never `0`/`1`).
 | `on_supplemental_o2` | bool | — | `true` / `false` | no (default `false`) | Whether the astronaut is breathing supplemental oxygen (NEWS2 input). |
 | `consciousness` | string | — | `"alert"` \| `"altered"` | no (default `"alert"`) | Level of consciousness (NEWS2 input). |
 | `noaa_s_scale` | int or null | NOAA S-scale | 0 – 5 or `null` | no (default `null`) | Current NOAA Solar Radiation Storm scale, if known. |
+| `radiation_dose_30day_msv` | number or null | mSv | ≥ 0 or `null` | no (default `null`) | Dose over the last 30 days; absent or null disables this rule. Compared numerically to a BFO mGy-Eq limit as a prototype assumption. |
+| `radiation_dose_career_msv` | number or null | mSv | ≥ 0 or `null` | no (default `null`) | Career effective dose; absent or null disables this rule. |
 
 Type rules (enforced):
 
@@ -100,7 +102,9 @@ guesses.** Error messages look like `'spo2' out of range: 101 not within [0, 100
   "mood_score": 3,
   "on_supplemental_o2": true,
   "consciousness": "altered",
-  "noaa_s_scale": 3
+  "noaa_s_scale": 3,
+  "radiation_dose_30day_msv": 150.0,
+  "radiation_dose_career_msv": 120.0
 }
 ```
 
@@ -169,6 +173,8 @@ NEWS2 components score 0–3 each. A component flag is emitted when **that compo
 | `NEWS2_HIGH` | red | NEWS2 total ≥ 7. |
 | `RADIATION_ELEVATED` | yellow | `radiation_dose_rate ≥ 100 µSv/h` **or** `noaa_s_scale ≥ 2`. |
 | `RADIATION_CRITICAL` | red | `radiation_dose_rate ≥ 1000 µSv/h` **or** `noaa_s_scale ≥ 3`. |
+| `RADIATION_30DAY_LIMIT` | yellow / red | One flag: dose ≥ 125 mSv (50% of 250) is yellow; ≥ 250 mSv (100%) is red. Numeric BFO mGy-Eq comparison is an assumption. `value` = dose; `threshold` = triggered mSv threshold; message gives percent of limit. |
+| `RADIATION_CAREER_LIMIT` | yellow / red | One flag: career dose ≥ 300 mSv (50% of 600) is yellow; ≥ 600 mSv (100%) is red. `value` = dose; `threshold` = triggered mSv threshold; message gives percent of limit. |
 | `EXERCISE_DEFICIT` | yellow | `exercise_minutes_today < 50 %` of `required_exercise_minutes`. |
 | `CALORIC_DEFICIT` | yellow | `caloric_intake < 70 %` of `caloric_target`. |
 | `SLEEP_DEFICIT` | yellow | `sleep_hours < 6`. |

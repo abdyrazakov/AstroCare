@@ -55,6 +55,8 @@ class VitalsSample:
     on_supplemental_o2: bool = False
     consciousness: Consciousness = "alert"
     noaa_s_scale: int | None = None
+    radiation_dose_30day_msv: float | None = None
+    radiation_dose_career_msv: float | None = None
 
 
 # (field, min, max) — inclusive integer ranges.
@@ -75,6 +77,8 @@ _NUMBER_FIELDS: tuple[tuple[str, float, float | None], ...] = (
     ("radiation_dose_rate", 0.0, None),
     ("sleep_hours", 0.0, 24.0),
 )
+
+_OPTIONAL_DOSE_FIELDS = ("radiation_dose_30day_msv", "radiation_dose_career_msv")
 
 _BP_RANGE = (0, 300)
 _NOAA_RANGE = (0, 5)
@@ -181,6 +185,11 @@ def parse_sample(raw: object) -> VitalsSample:
         name: _as_number(name, _require(raw, name), lo, hi) for name, lo, hi in _NUMBER_FIELDS
     }
 
+    optional_doses = {
+        name: None if raw.get(name) is None else _as_number(name, raw[name], 0.0, None)
+        for name in _OPTIONAL_DOSE_FIELDS
+    }
+
     return VitalsSample(
         timestamp=_as_non_empty_str("timestamp", _require(raw, "timestamp")),
         astronaut_id=_as_non_empty_str("astronaut_id", _require(raw, "astronaut_id")),
@@ -190,4 +199,5 @@ def parse_sample(raw: object) -> VitalsSample:
         noaa_s_scale=_as_optional_noaa(raw.get("noaa_s_scale")),
         **ints,
         **numbers,
+        **optional_doses,
     )

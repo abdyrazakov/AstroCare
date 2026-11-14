@@ -5,7 +5,7 @@ nested ``{"systolic", "diastolic"}`` object) -- the shape the data team hands
 to ``Brain.process``, never the typed ``VitalsSample``.
 
 ``_NOMINAL_RAW`` mirrors the numeric values of ``tests/conftest.py``'s
-``NOMINAL_DEFAULTS`` (required fields only) so "nominal" means the same thing
+``NOMINAL_DEFAULTS`` (required fields, plus optional cumulative doses) so "nominal" means the same thing
 on both sides of the contract; if one changes, update the other.
 """
 
@@ -23,7 +23,16 @@ _STEP_SECONDS = 60
 _MIN_ANOMALIES = 3
 _MAX_ANOMALIES = 5
 
-# Required-field values, matching tests/conftest.py NOMINAL_DEFAULTS exactly.
+# Synthetic scenario values, not safety thresholds: docs/EVIDENCE.md (ASSUMPTION).
+# Requested ISS-like 0.5 mSv/day * 30 days; career history is illustrative.
+_NOMINAL_30DAY_MSV = 15.0
+_NOMINAL_CAREER_MSV = 120.0
+# Test stimuli above the limits documented at:
+# https://www.nasa.gov/reference/4-0-human-performance/
+_WARNING_30DAY_MSV = 150.0
+_EXCEEDED_CAREER_MSV = 660.0
+
+# Required values match tests/conftest.py; optional cumulative doses are synthetic.
 _NOMINAL_RAW: dict[str, Any] = {
     "hr": 68,
     "spo2": 98,
@@ -31,6 +40,8 @@ _NOMINAL_RAW: dict[str, Any] = {
     "temp_c": 36.7,
     "resp_rate": 15,
     "radiation_dose_rate": 20.0,
+    "radiation_dose_30day_msv": _NOMINAL_30DAY_MSV,
+    "radiation_dose_career_msv": _NOMINAL_CAREER_MSV,
     "exercise_minutes_today": 120,
     "required_exercise_minutes": 150,
     "caloric_intake": 2600,
@@ -68,6 +79,10 @@ def _anomaly(
 ANOMALIES: Mapping[str, Anomaly] = {
     anomaly.name: anomaly
     for anomaly in (
+        _anomaly("dose_30day_warning", {"radiation_dose_30day_msv": _WARNING_30DAY_MSV},
+                 "yellow", "RADIATION_30DAY_LIMIT"),
+        _anomaly("career_limit_exceeded", {"radiation_dose_career_msv": _EXCEEDED_CAREER_MSV},
+                 "red", "RADIATION_CAREER_LIMIT"),
         _anomaly("tachycardia", {"hr": 125}, "yellow", "HR_HIGH"),
         _anomaly("hypoxia", {"spo2": 89}, "yellow", "SPO2_LOW", "NEWS2_MEDIUM"),
         _anomaly(

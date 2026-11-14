@@ -30,7 +30,7 @@ _CLOSING_BY_ALERT_LEVEL: Final[dict[str, str]] = {
     "yellow": "Re-check in 15 minutes; contact ground medical if it persists.",
 }
 
-# One actionable sentence for every flag code in AGENTS.md section 3 (18 codes).
+# One actionable sentence for every flag code in AGENTS.md section 3 (20 codes).
 FLAG_ADVICE: Final[dict[str, str]] = {
     "HR_HIGH": "Heart rate is high; have the astronaut rest and avoid exertion until it normalizes.",
     "HR_LOW": "Heart rate is low; monitor closely and avoid sudden exertion.",
@@ -49,6 +49,14 @@ FLAG_ADVICE: Final[dict[str, str]] = {
     "NEWS2_HIGH": "Overall NEWS2 score is critically elevated; treat as a medical emergency.",
     "RADIATION_ELEVATED": "Radiation dose rate is elevated; move to a shielded area until it drops.",
     "RADIATION_CRITICAL": "Radiation dose rate is critical; move to the most shielded area immediately.",
+    "RADIATION_30DAY_LIMIT": (
+        "Accumulated radiation dose over the last month is elevated; review the exposure "
+        "record and shielding plan with ground medical."
+    ),
+    "RADIATION_CAREER_LIMIT": (
+        "Accumulated career radiation dose requires review; consult ground medical "
+        "before planning further exposure."
+    ),
     "EXERCISE_DEFICIT": "Exercise today is below target; schedule the remaining time if feasible.",
     "CALORIC_DEFICIT": "Caloric intake is below target; increase food intake at the next meal.",
     "SLEEP_DEFICIT": "Sleep was below 6 hours; schedule a rest period before demanding tasks.",
