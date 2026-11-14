@@ -174,6 +174,8 @@ One output object per processed input sample. Keys are **camelCase**.
 | `doctorSource` | `"llm"` \| `"cache"` \| `"fallback"` | Where the recommendation came from: live language model, a cached answer for an identical flag set, or a built-in rule-based text when the model is unavailable. Presentation may show this as a small badge; it does not change how the text should be displayed. |
 | `bodySystems` | object | All 16 AstroCare zone IDs mapped to `green`/`yellow`/`red`; worst mapped severity wins. |
 | `medicalKit` | array of string | Optional validated onboard-kit codes, passed through unchanged. |
+| `likelyConditions[].resources` | array | Provisional resource codes with `onboard` true/false/null. |
+| `likelyConditions[].onboardCapability` | object | `full`, `partial`, `none`, or `unknown`, plus missing codes. |
 
 ### Flag codes
 
@@ -278,6 +280,8 @@ violates the contract; the message names the offending field.
 | `GET` | `/history` | — | HTTP 200 with the last 50 outputs in global arrival order |
 | `GET` | `/history?astronaut_id=X` | — | HTTP 200 with the last 50 outputs for X, or `[]` |
 | `GET` | `/` | — | plain text: one latest-output block per astronaut, followed by doctorStats |
+| `POST` | `/ask` | `{"astronaut_id":"X","question":"..."}` | interactive doctor answer; CORS enabled |
+| `OPTIONS` | `*` | — | CORS preflight, HTTP 204 |
 
 Example:
 

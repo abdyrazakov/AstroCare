@@ -51,14 +51,14 @@ class BrainWebSocketServer:
                             f"Sec-WebSocket-Accept: {accept}\r\n\r\n").encode())
             with self._lock: self._clients.add(client)
             while not self._closed.is_set():
-                header = client.recv(2)
-                if not header: break
+                header = self._recv_exact(client, 2)
+                if len(header) != 2: break
                 length = header[1] & 0x7F
-                if length == 126: length = struct.unpack("!H", client.recv(2))[0]
-                elif length == 127: length = struct.unpack("!Q", client.recv(8))[0]
+                if length == 126: length = struct.unpack("!H", self._recv_exact(client, 2))[0]
+                elif length == 127: length = struct.unpack("!Q", self._recv_exact(client, 8))[0]
                 masked = header[1] & 0x80
-                mask = client.recv(4) if masked else b""
-                data = bytearray(client.recv(length))
+                mask = self._recv_exact(client, 4) if masked else b""
+                data = bytearray(self._recv_exact(client, length))
                 if masked:
                     for i in range(length): data[i] ^= mask[i % 4]
                 opcode = header[0] & 0x0F
@@ -68,6 +68,18 @@ class BrainWebSocketServer:
         finally:
             with self._lock: self._clients.discard(client)
             client.close()
+
+    @staticmethod
+    def _recv_exact(client: socket.socket, length: int) -> bytes:
+        chunks: list[bytes] = []
+        remaining = length
+        while remaining:
+            chunk = client.recv(remaining)
+            if not chunk:
+                return b"".join(chunks)
+            chunks.append(chunk)
+            remaining -= len(chunk)
+        return b"".join(chunks)
 
     def broadcast(self, payload: Mapping[str, object] | str) -> None:
         text = payload if isinstance(payload, str) else json.dumps(payload, separators=(",", ":"))

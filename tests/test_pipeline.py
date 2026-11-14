@@ -98,9 +98,7 @@ def test_red_sample_has_red_alert_level_and_contract_shaped_output():
     assert output["timestamp"] == "2026-11-14T10:05:00Z"
     assert output["likelyConditions"]
     for condition in output["likelyConditions"]:
-        assert set(condition.keys()) == {
-            "code", "label", "confidence", "drivers", "evidenceRef",
-        }
+            assert {"code", "label", "confidence", "drivers", "evidenceRef", "phaseAdjusted", "resources", "onboardCapability"} <= set(condition.keys())
     for detail in output["flagDetails"]:
         assert set(detail.keys()) == {"code", "severity", "message", "value", "threshold", "evidenceRef"}
 

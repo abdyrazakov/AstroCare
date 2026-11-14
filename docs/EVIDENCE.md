@@ -59,3 +59,7 @@ they do not turn operational prototype cutoffs into validated clinical rules.
 | CABIN_CO2_HIGH | ≥7.6 mmHg | ISS Flight Rule B17-5 / OCHMO-TB-004 | Flight rule section | VERIFY | Operational red threshold pending document review. |
 | PVT_SLOW | >500 ms | Basner & Dinges PVT-B | Lapse convention | VERIFY | PVT lapse threshold; spaceflight applicability pending. |
 | IOP_HIGH | >21 mmHg | OCHMO/HRP SANS context | Ocular hypertension | VERIFY | Common screening boundary; astronaut threshold pending. |
+| HYPERCAPNIA | weighted prototype | NASA OCHMO-TB-004 / Law et al. 2014 | VERIFY | VERIFY | Condition name not confirmed in EMCL. |
+| SANS | weighted prototype | NASA HRP Risk of SANS | VERIFY | VERIFY | EMCL name “VIIP” not confirmed. |
+| IMM phase priors | listed multipliers | Researcher incidence table pending | phase_priors.py | DESIGN DECISION | Replace when phase frequencies are supplied. |
+| medical-kit resources | provisional mapping | ISS medical kit / EMCL treatment resources | VERIFY | VERIFY | Researcher confirmation pending. |

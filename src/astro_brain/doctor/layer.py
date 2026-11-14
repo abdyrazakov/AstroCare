@@ -60,7 +60,7 @@ _WHITESPACE_RE = re.compile(r"\s+")
 
 RecommendationSource = Literal["llm", "cache", "fallback"]
 
-CacheKey = tuple[str, tuple[str, ...], tuple[str, ...]]
+CacheKey = tuple[str, ...]
 
 
 @dataclass(frozen=True)
@@ -91,6 +91,13 @@ def _condition_codes(assessment: _AssessmentLike) -> tuple[str, ...]:
         return tuple(getter())
     conditions = getattr(assessment, "likely_conditions", ())
     return tuple(condition.code for condition in conditions)
+
+
+def _capability_statuses(assessment: _AssessmentLike) -> tuple[str, ...]:
+    return tuple(
+        str(getattr(condition, "onboard_capability", {}).get("status", "unknown"))
+        for condition in getattr(assessment, "likely_conditions", ())
+    )
 
 
 class DoctorLayer:
@@ -128,7 +135,11 @@ class DoctorLayer:
     @staticmethod
     def cache_key(assessment: _AssessmentLike) -> CacheKey:
         """``(alert_level, flag_codes, condition_codes)`` -- identical pictures share a key."""
-        return (assessment.alert_level, assessment.flag_codes(), _condition_codes(assessment))
+        conditions = _condition_codes(assessment)
+        statuses = _capability_statuses(assessment)
+        if statuses:
+            return (assessment.alert_level, assessment.flag_codes(), conditions, statuses)
+        return (assessment.alert_level, assessment.flag_codes(), conditions)
 
     def recommend(self, assessment: _AssessmentLike) -> Recommendation:
         """Return a recommendation for ``assessment``; see module docstring for rules."""
@@ -150,6 +161,28 @@ class DoctorLayer:
             return self._inflight_skip_result(assessment)
 
         return self._query_llm_or_fallback(key, assessment)
+
+    def ask(self, context: dict[str, object], question: str, timeout_s: float = 30.0) -> dict[str, str]:
+        """Answer an interactive crew question without using the recommendation cache."""
+        system = (
+            "You are a flight-surgeon assistant. Answer in 3 to 6 plain-language sentences, "
+            "without diagnosis or markdown. Ask one clarifying question when more than one "
+            "condition is present. If the alert level is red, direct the crew to ground medical."
+        )
+        user = "Context: " + str(context) + "\nQuestion: " + question
+        disclaimer = "Prototype decision support; follow mission procedures and ground medical direction."
+        try:
+            if not self._enabled:
+                raise OllamaError("doctor disabled")
+            text = self._sanitize(self._client.generate(system, user, timeout_s=timeout_s))
+            if not text:
+                raise OllamaError("empty response")
+            return {"answer": text, "source": "llm", "disclaimer": disclaimer}
+        except Exception:
+            flags = ", ".join(str(item.get("code")) for item in context.get("flagDetails", []) if isinstance(item, dict))
+            actions = " ".join(str(item) for item in context.get("doctorRecommendation", "").split("."))
+            answer = f"Model unavailable. Current status: {context.get('alertLevel', 'unknown')}. Active flags: {flags or 'none'}. Suggested actions: {actions}".replace("  ", " ")
+            return {"answer": answer, "source": "fallback", "disclaimer": disclaimer}
 
     # ----------------------------------------------------------------- internals
 

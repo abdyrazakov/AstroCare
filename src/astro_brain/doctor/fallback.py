@@ -62,6 +62,10 @@ FLAG_ADVICE: Final[dict[str, str]] = {
     "CALORIC_LOW": "Caloric intake is in the NASA yellow band; increase food intake at the next meal and monitor the target.",
     "SLEEP_DEFICIT": "Sleep was below 6 hours; schedule a rest period before demanding tasks.",
     "LOW_MOOD": "Mood score is low; check in with the astronaut and consider a support break.",
+    "CABIN_CO2_ELEVATED": "Cabin carbon dioxide is elevated; check ventilation and scrubber status.",
+    "CABIN_CO2_HIGH": "Cabin carbon dioxide is high; check the scrubber, move to better ventilation, reduce workload, and contact ground medical.",
+    "PVT_SLOW": "Psychomotor vigilance is slow; pause demanding tasks and reassess alertness.",
+    "IOP_HIGH": "Eye pressure is high; stop strenuous activity and arrange an ocular assessment.",
 }
 
 
@@ -73,6 +77,8 @@ class _FlagLike(Protocol):
 class _AssessmentLike(Protocol):
     alert_level: str
     flags: tuple[_FlagLike, ...]
+
+    likely_conditions: tuple[object, ...]
 
 
 def _generic_advice(code: str) -> str:
@@ -88,6 +94,23 @@ def _ordered_flags(flags: tuple[_FlagLike, ...]) -> list[_FlagLike]:
     return sorted(flags, key=lambda flag: 0 if flag.severity == "red" else 1)
 
 
+def _resource_sentence(assessment: _AssessmentLike) -> str:
+    for condition in getattr(assessment, "likely_conditions", ()):
+        capability = getattr(condition, "onboard_capability", None)
+        resources = getattr(condition, "resources", ())
+        if not capability or capability.get("status") == "unknown":
+            continue
+        onboard = [str(item["code"]) for item in resources if item.get("onboard") is True]
+        missing = [str(item["code"]) for item in resources if item.get("onboard") is False]
+        parts = []
+        if onboard:
+            parts.append(f"Onboard: {', '.join(onboard)}.")
+        if missing:
+            parts.append(f"Not onboard: {', '.join(missing)} — ground medical consult.")
+        return " ".join(parts)
+    return ""
+
+
 def build_fallback(assessment: _AssessmentLike) -> str:
     """Deterministic recommendation text; never raises, never touches the network."""
     flags = assessment.flags
@@ -101,4 +124,5 @@ def build_fallback(assessment: _AssessmentLike) -> str:
     selected = _ordered_flags(flags)[:_MAX_FLAGS_IN_TEXT]
     advice_sentences = [_advice_for(flag) for flag in selected]
 
-    return " ".join([lead, *advice_sentences, closing])
+    resource_sentence = _resource_sentence(assessment)
+    return " ".join([lead, *advice_sentences, resource_sentence, closing]).replace("  ", " ").strip()

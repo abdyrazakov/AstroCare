@@ -13,12 +13,16 @@ module-level import would make importing ``astro_brain.pipeline`` itself fail
 from __future__ import annotations
 
 import os
+import threading
+from collections import OrderedDict
 from typing import Any, Protocol
 
 from .contract import parse_sample
 from .doctor.layer import DoctorLayer, Recommendation
 from .doctor.ollama_client import OllamaClient
 from .body_map import body_systems
+from .hysteresis import apply_hysteresis, update_memory
+from dataclasses import replace
 
 _ENV_OLLAMA_URL = "ASTRO_OLLAMA_URL"
 _ENV_OLLAMA_MODEL = "ASTRO_OLLAMA_MODEL"
@@ -77,6 +81,15 @@ class Brain:
 
     def __init__(self, doctor: DoctorLayer | None = None) -> None:
         self._doctor = doctor if doctor is not None else _build_default_doctor()
+        self._hysteresis: OrderedDict[str, dict[str, Any]] = OrderedDict()
+        self._hysteresis_lock = threading.Lock()
+
+    def reset(self, astronaut_id: str | None = None) -> None:
+        with self._hysteresis_lock:
+            if astronaut_id is None:
+                self._hysteresis.clear()
+            else:
+                self._hysteresis.pop(astronaut_id, None)
 
     def process(self, raw: dict[str, Any]) -> dict[str, Any]:
         """Validate ``raw`` against the input contract and return the output contract dict.
@@ -87,6 +100,22 @@ class Brain:
 
         sample = parse_sample(raw)
         assessment = assess(sample)
+        with self._hysteresis_lock:
+            previous = self._hysteresis.get(sample.astronaut_id, {})
+            held_flags = apply_hysteresis(previous, assessment.flags, sample)
+            self._hysteresis[sample.astronaut_id] = update_memory(previous, held_flags)
+            self._hysteresis.move_to_end(sample.astronaut_id)
+            while len(self._hysteresis) > 64:
+                self._hysteresis.popitem(last=False)
+        if held_flags != assessment.flags:
+            from .conditions import likely_conditions
+            from .flags import alert_level_from_flags
+            assessment = replace(
+                assessment,
+                flags=held_flags,
+                alert_level=alert_level_from_flags(held_flags),
+                likely_conditions=likely_conditions(held_flags, sample.mission_phase, sample.medical_kit),
+            )
         recommendation = self._doctor.recommend(assessment)
         output = to_output(assessment, recommendation)
         for source, target in (("mission_day", "missionDay"), ("mission_phase", "missionPhase"),

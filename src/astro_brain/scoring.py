@@ -53,5 +53,5 @@ def assess(sample: VitalsSample) -> Assessment:
         news2_total=news2.total,
         news2_components=news2.components,
         flags=flags,
-        likely_conditions=likely_conditions(flags),
+        likely_conditions=likely_conditions(flags, sample.mission_phase, sample.medical_kit),
     )

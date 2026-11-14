@@ -17,3 +17,14 @@ The frontend should show live crew ticks, alert severity, mapped body zones, act
 | MISSED_ARED | `EXERCISE_DEFICIT` | muscles_legs, skeleton_lower |
 
 Scenario mappings are expected until a live ASTRALIS run is completed. JSONL mode is available with `--jsonl PATH [--daily PATH]`; `--inprocess` prints alert level, flags and likely conditions without HTTP.
+
+## v0.4 operational notes
+
+The Astralis feeder is run with the simulator interpreter and `PYTHONPATH=src`; the brain remains stdlib-only, while Astralis requires `pydantic` and `numpy` (it does not require `pyarrow`). The Astralis SPE scenario grows with its OU process toward 1.05 mSv/h; in an observed run `RADIATION_ELEVATED` appeared around mission minute 10. Use `controller.advance(N)` for accelerated runs. The SPE scenario is observed; other scenarios remain expected until a matching run is captured.
+
+```bash
+curl -X POST localhost:8765/ask -H 'Content-Type: application/json' \
+  -d '{"astronaut_id":"A1","question":"Should I do my ARED session today?"}'
+```
+
+The frontend AI Assistant tab may call this HTTP endpoint directly.

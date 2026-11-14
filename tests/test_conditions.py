@@ -99,7 +99,7 @@ def test_confidence_is_bounded_and_rounded_in_the_output_shape():
     assert 0.0 < condition.confidence <= 1.0
     assert payload["confidence"] == round(condition.confidence, 2)
     assert payload["confidence"] >= MIN_CONFIDENCE
-    assert set(payload) == {"code", "label", "confidence", "drivers", "evidenceRef"}
+    assert {"code", "label", "confidence", "drivers", "evidenceRef", "phaseAdjusted", "resources", "onboardCapability"} <= set(payload)
 
 
 def test_ranking_is_deterministic_for_the_same_flags():

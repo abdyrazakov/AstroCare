@@ -129,6 +129,9 @@ class _Handler(BaseHTTPRequestHandler):
     def _write(self, status: int, body: bytes, content_type: str) -> None:
         self.send_response(status)
         self.send_header("Content-Type", content_type)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
@@ -154,7 +157,18 @@ class _Handler(BaseHTTPRequestHandler):
         if self.path == "/ingest":
             self._handle_ingest()
             return
+        if self.path == "/ask":
+            self._handle_ask()
+            return
         self._send_json(404, {"error": f"not found: {self.path}"})
+
+    def do_OPTIONS(self) -> None:  # noqa: N802
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
 
     def _handle_root(self) -> None:
         astronauts = self.store.all_latest()["astronauts"]
@@ -209,6 +223,30 @@ class _Handler(BaseHTTPRequestHandler):
         if self.ws is not None:
             self.ws.broadcast(to_brain_tick(output, payload, self.seq[0])); self.seq[0] += 1
         self._send_json(200, output)
+
+    def _handle_ask(self) -> None:
+        try:
+            payload = self._read_json_body()
+        except json.JSONDecodeError as exc:
+            self._send_json(400, {"error": f"invalid JSON body: {exc}"})
+            return
+        astronaut_id = payload.get("astronaut_id") if isinstance(payload, dict) else None
+        question = payload.get("question") if isinstance(payload, dict) else None
+        if not isinstance(astronaut_id, str) or not isinstance(question, str):
+            self._send_json(400, {"error": "astronaut_id and question are required"})
+            return
+        question = question[:500].strip()
+        if not question:
+            self._send_json(400, {"error": "question must not be empty"})
+            return
+        context = self.store.latest(astronaut_id)
+        if context is None:
+            self._send_json(404, {"error": "no data for astronaut", "astronautId": astronaut_id})
+            return
+        doctor = getattr(self.brain, "_doctor", None)
+        response = doctor.ask(context, question, timeout_s=30.0)
+        response["contextTimestamp"] = str(context.get("timestamp", ""))
+        self._send_json(200, response)
 
 
 def make_handler(brain: Brain, store: StateStore, *, verbose: bool = False,
