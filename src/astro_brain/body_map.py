@@ -29,7 +29,7 @@ def zones_for_flag(code: str) -> tuple[str, ...]:
     if code.startswith("TEMP_"): return ("skin_immune",)
     if code in {"CONSCIOUSNESS_ALTERED", "PVT_SLOW", "SLEEP_DEFICIT", "LOW_MOOD", "PHQ2_POSITIVE"}: return ("brain",)
     if code == "IOP_HIGH": return ("eyes",)
-    if code == "HYPERCAPNIA": return ("lungs", "brain")
+    if code == "CO2_HEADACHE": return ("lungs", "brain")
     if code == "SANS": return ("eyes", "brain")
     if code == "RADIATION_30DAY_LIMIT" or code == "RADIATION_CAREER_LIMIT":
         return ("skin_immune", "skeleton_upper", "skeleton_lower")

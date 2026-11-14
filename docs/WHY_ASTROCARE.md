@@ -167,3 +167,7 @@ independent teams working off one nine-page contract, never reading each other's
 same discipline a real mission needs when sensors, flight software, and ground systems are each
 built by someone else. This is a hackathon prototype, not a medical device — but the architecture
 is the part meant to survive the trip to Mars.
+
+## v0.6 communication note
+
+For Mars operations, use “up to ~22 minutes one way” (NASA Mars facts — VERIFY).

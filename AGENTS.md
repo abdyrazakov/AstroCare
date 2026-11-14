@@ -175,6 +175,7 @@ One output object per processed input sample. Keys are **camelCase**.
 | `bodySystems` | object | All 16 AstroCare zone IDs mapped to `green`/`yellow`/`red`; worst mapped severity wins. |
 | `medicalKit` | array of string | Optional validated onboard-kit codes, passed through unchanged. |
 | `plans` | object | Additive exercise and nutrition plan generated from current flags and conditions. |
+| `likelyConditions[].resources[]` | object | Canonical CliFF code, human name, category, `essentialUnits`, and onboard status; see `src/astro_brain/cliff_resources.py`. |
 | `likelyConditions[].resources` | array | Provisional resource codes with `onboard` true/false/null. |
 | `likelyConditions[].onboardCapability` | object | `full`, `partial`, `none`, or `unknown`, plus missing codes. |
 
@@ -211,6 +212,7 @@ NEWS2 components score 0–3 each. A component flag is emitted when **that compo
 | `LOW_MOOD` | yellow | `mood_score ≤ 4`. |
 | `CABIN_CO2_ELEVATED` | yellow | `cabin_ppco2_mmhg ≥ 3.0`. |
 | `CABIN_CO2_HIGH` | red | `cabin_ppco2_mmhg ≥ 7.6`; replaces elevated. |
+| `PHQ2_POSITIVE` | yellow | `phq2_score ≥ 3`; screening signal, not a diagnosis. |
 | `PVT_SLOW` | yellow | `pvt_slowest10_rt_ms > 500`. |
 | `IOP_HIGH` | yellow | `iop_mmhg > 21`. |
 
@@ -314,7 +316,7 @@ Every output includes `bodySystems` with all 16 frontend zone IDs, defaulting to
 - The data team **must announce** any format change before shipping it, and **must never
   silently change** units, key names or ranges. Adding an extra key is allowed without
   announcement (it is ignored), but it will not be used until the contract is updated.
-- Version of this contract: `astro-brain 0.3.0`.
+- Version of this contract: `astro-brain 0.6.0`.
 
 ---
 

@@ -247,4 +247,4 @@ agents checking their work. Standard library only, test-driven development, 80%+
 ## License
 
 MIT (see [LICENSE](LICENSE)).
-v0.5 adds phase-aware daily plans, mission episode reports, and optional PHQ-2 screening; research status remains documented in `docs/PHASE_PRIORS_AND_RESOURCES_RESEARCH_2026-11-14.md`.
+v0.6 wires canonical CliFF resources, renames the CO₂ condition to `CO2_HEADACHE`, and records honest Astralis scenario validation in `docs/VALIDATION.md`.

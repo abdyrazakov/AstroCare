@@ -14,7 +14,7 @@ def _raw(name: str) -> dict[str, object]:
     return apply_anomaly(nominal_raw("2026-11-14T10:00:00Z"), name)
 
 
-@pytest.mark.parametrize("name,condition", [("hypercapnia", "HYPERCAPNIA"), ("sans_like", "SANS")])
+@pytest.mark.parametrize("name,condition", [("hypercapnia", "CO2_HEADACHE"), ("sans_like", "SANS")])
 def test_new_conditions_are_reachable(name: str, condition: str) -> None:
     result = assess(parse_sample(_raw(name)))
     assert condition in result.condition_codes()
@@ -32,7 +32,7 @@ def test_condition_resource_shape(name: str) -> None:
     for condition in conditions:
         payload = condition.to_dict()
         assert "resources" in payload
-        assert payload["onboardCapability"]["status"] in {"full", "partial", "none", "unknown"}
+        assert payload["onboardCapability"]["status"] in {"full", "partial", "none", "unknown", "no_rt"}
 
 
 def test_hysteresis_sequence() -> None:

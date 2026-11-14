@@ -63,6 +63,6 @@ CONDITION_EVIDENCE_BY_CODE = MappingProxyType({
     "SLEEP_DISORDER": "NASA IMM overview; weights are prototype — VERIFIED",
     "DEPRESSION": "NASA IMM overview; weights are prototype — VERIFIED",
     "NUTRITIONAL_DEFICIT": "NASA Appendix E; weights are prototype — VERIFIED",
-    "HYPERCAPNIA": "NASA OCHMO-TB-004 / Law et al. 2014 — VERIFY",
+    "CO2_HEADACHE": "EMCL ICL64 Headache – CO2; CliFF RT p.8 — VERIFIED",
     "SANS": "NASA HRP Risk of SANS — VERIFY; EMCL name unconfirmed",
 })

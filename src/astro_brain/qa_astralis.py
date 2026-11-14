@@ -14,6 +14,14 @@ SCENARIOS = (
     "HYPERCAPNIC_CABIN", "SOLAR_PARTICLE_EVENT", "SANS_FLUID_SHIFT",
     "NEUROCOGNITIVE_FATIGUE", "MISSED_ARED",
 )
+EXPECTED = {
+    "HYPERCAPNIC_CABIN": {"CABIN_CO2_ELEVATED", "CABIN_CO2_HIGH", "CO2_HEADACHE"},
+    "SOLAR_PARTICLE_EVENT": {"RADIATION_ELEVATED", "RADIATION_CRITICAL", "ACUTE_RADIATION_SYNDROME"},
+    "SANS_FLUID_SHIFT": {"IOP_HIGH", "SANS"},
+    "NEUROCOGNITIVE_FATIGUE": {"PVT_SLOW", "SLEEP_DISORDER"},
+    "MISSED_ARED": {"EXERCISE_DEFICIT"},
+}
+GENERIC = {"TEMP_LOW", "TEMP_HIGH", "NEWS2_MEDIUM", "NEWS2_HIGH", "EXERCISE_DEFICIT"}
 
 
 def run(path: str, mission_seconds: int, step: int) -> list[dict[str, object]]:
@@ -31,7 +39,10 @@ def run(path: str, mission_seconds: int, step: int) -> list[dict[str, object]]:
             continue
         controller.start()
         brain = Brain(DoctorLayer(OllamaClient(), enabled=False))
-        seen: dict[str, set[str]] = {}
+        seen: set[str] = set()
+        first: dict[str, dict[str, object]] = {}
+        generic_seen: set[str] = set()
+        generic_first: dict[str, dict[str, object]] = {}
         peak = "green"
         for _ in range(0, mission_seconds, step):
             controller.advance(step)
@@ -42,10 +53,36 @@ def run(path: str, mission_seconds: int, step: int) -> list[dict[str, object]]:
             for tick in latest_by_id.values():
                 astronaut = str(tick.get("astronaut_id"))
                 output = brain.process(stream_tick_to_input(tick, daily_by_key.get((astronaut, tick.get("mission_day")))))
-                seen.setdefault(astronaut, set()).update(output["activeFlags"])
+                signals = set(output["activeFlags"])
+                signals.update(str(item["code"]) for item in output.get("likelyConditions", []))
+                for signal in signals & (GENERIC - EXPECTED[scenario_id]):
+                    generic_seen.add(signal)
+                    if signal not in generic_first:
+                        generic_first[signal] = {
+                            "second": controller.get_state().mission_time_seconds,
+                            "value": tick.get("temp_c"),
+                            "astronaut": astronaut,
+                            "daily": daily_by_key.get((astronaut, tick.get("mission_day"))),
+                        }
+                for signal in signals & EXPECTED[scenario_id]:
+                    seen.add(signal)
+                    if signal not in first:
+                        value = {
+                            "CABIN_CO2_ELEVATED": tick.get("cabin_ppco2"),
+                            "CABIN_CO2_HIGH": tick.get("cabin_ppco2"),
+                            "IOP_HIGH": tick.get("iop_mmhg"),
+                            "PVT_SLOW": tick.get("pvt_slowest10_rt"),
+                            "RADIATION_ELEVATED": tick.get("radiation_dose_rate"),
+                            "RADIATION_CRITICAL": tick.get("radiation_dose_rate"),
+                            "EXERCISE_DEFICIT": tick.get("hr"),
+                            "CO2_HEADACHE": tick.get("cabin_ppco2"),
+                            "SANS": tick.get("iop_mmhg"),
+                            "ACUTE_RADIATION_SYNDROME": tick.get("radiation_dose_rate"),
+                        }.get(signal)
+                        first[signal] = {"second": controller.get_state().mission_time_seconds, "value": value, "astronaut": astronaut}
                 if {"green": 0, "yellow": 1, "red": 2}[output["alertLevel"]] > {"green": 0, "yellow": 1, "red": 2}[peak]:
                     peak = output["alertLevel"]
-        results.append({"scenario": scenario_id, "status": "PASS" if any(seen.values()) else "FAIL", "flags": sorted({flag for values in seen.values() for flag in values}), "peak": peak})
+        results.append({"scenario": scenario_id, "status": "PASS" if seen else "FAIL", "signals": sorted(seen), "first": first, "generic": sorted(generic_seen), "genericFirst": generic_first, "peak": peak})
     return results
 
 

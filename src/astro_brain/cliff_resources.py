@@ -179,11 +179,11 @@ _DEPRESSION_ITEMS: tuple[CliffResource, ...] = (
     _item("SERTRALINE_50MG", "Zoloft (Sertraline) 50 mg", 60, 60, "medication"),
 )
 
-# --- HYPERCAPNIA -- report calls it CO2_HEADACHE, ICL64 -----------------------
+# --- CO2_HEADACHE -- report calls it CO2_HEADACHE, ICL64 -----------------------
 # Source: Headache (CO2 induced) Cliff, 5/11/2020, RT p.8.
 # Note: EMCL/ICL name is "Headache - CO2" (ICL64), not "Hypercapnia"; a code
-# rename is planned (see astro_brain.phase_priors.IMM_PRIORS["HYPERCAPNIA"]).
-_HYPERCAPNIA_ITEMS: tuple[CliffResource, ...] = (
+# canonical code is CO2_HEADACHE (EMCL ICL64).
+_CO2_HEADACHE_ITEMS: tuple[CliffResource, ...] = (
     _item("BP_CUFF", "Blood pressure cuff", 0, 1, "circulation"),
     _item("BP_MONITOR", "Blood pressure monitor", 0, 1, "circulation"),
     _item("ACETAMINOPHEN_325MG", "Tylenol (Acetaminophen) 325 mg", 0, 4, "medication"),
@@ -217,7 +217,7 @@ ESSENTIAL_RESOURCES: MappingProxyType[str, tuple[CliffResource, ...]] = MappingP
     "CARDIAC_ARRHYTHMIA": _CARDIAC_ARRHYTHMIA_ITEMS,
     "SLEEP_DISORDER": _SLEEP_DISORDER_ITEMS,
     "DEPRESSION": _DEPRESSION_ITEMS,
-    "HYPERCAPNIA": _HYPERCAPNIA_ITEMS,
+    "CO2_HEADACHE": _CO2_HEADACHE_ITEMS,
     "SANS": _SANS_ITEMS,
     "RESPIRATORY_INFECTION_LOWER": _RESPIRATORY_INFECTION_LOWER_ITEMS,
     "ALTITUDE_SICKNESS": (),
@@ -231,7 +231,7 @@ SOURCE_BY_CONDITION: MappingProxyType[str, str | None] = MappingProxyType({
     "CARDIAC_ARRHYTHMIA": "Atrial Fibrillation/Atrial Flutter Cliff, 5/11/2020, RT p.6",
     "SLEEP_DISORDER": "Insomnia (space adaptation) Cliff, 5/11/2020, RT p.5",
     "DEPRESSION": "Depression Cliff, 5/11/2020, RT p.5",
-    "HYPERCAPNIA": "Headache (CO2 induced) Cliff, 5/11/2020, RT p.8",
+    "CO2_HEADACHE": "Headache (CO2 induced) Cliff, 5/11/2020, RT p.8",
     "SANS": "ICL100_Space Flight Associated Neuro-Ocular Syndrome (Sans) Cliff, 9/19/2022, CRT prose p.6",
     "RESPIRATORY_INFECTION_LOWER": "Respiratory Infection Cliff, 5/11/2020, RT p.6",
     "ALTITUDE_SICKNESS": None,
@@ -245,7 +245,7 @@ STATUS_BY_CONDITION: MappingProxyType[str, str] = MappingProxyType({
     "CARDIAC_ARRHYTHMIA": "VERIFIED_RT",
     "SLEEP_DISORDER": "VERIFIED_RT",
     "DEPRESSION": "VERIFIED_RT",
-    "HYPERCAPNIA": "VERIFIED_RT",
+    "CO2_HEADACHE": "VERIFIED_RT",
     "SANS": "VERIFIED_CRT_PROSE",
     "RESPIRATORY_INFECTION_LOWER": "VERIFIED_RT",
     "ALTITUDE_SICKNESS": "NO_RT",
@@ -256,7 +256,7 @@ STATUS_BY_CONDITION: MappingProxyType[str, str] = MappingProxyType({
 # of any Essential RT/CRT-prose item above: the report explicitly notes these
 # are not RT consumables. The portable CO2 monitor (CDM) is an environmental
 # diagnostic mentioned only in CliFF prose (report section 6), not an
-# Essential RT row for HYPERCAPNIA; it is kept out of ESSENTIAL_RESOURCES so
+# Essential RT row for CO2_HEADACHE; it is kept out of ESSENTIAL_RESOURCES so
 # that table does not misrepresent it as an RT item.
 NON_RT_CANONICAL_CODES: frozenset[str] = frozenset({"PORTABLE_CO2_MONITOR_CDM"})
 

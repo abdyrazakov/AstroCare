@@ -51,10 +51,10 @@ _NOMINAL_RAW: dict[str, Any] = {
     "sleep_hours": 7.5,
     "mood_score": 8,
     "medical_kit": [
-        "ORAL_REHYDRATION_SALTS", "IV_ACCESS_KIT", "THERMOMETER",
-        "ANTIBIOTICS_BROAD_SPECTRUM", "PULSE_OXIMETER", "SUPPLEMENTAL_O2",
-        "ANTIEMETICS", "STORM_SHELTER", "DOSIMETER", "ECG_MONITOR",
-        "BETA_BLOCKER", "NUTRITION_SUPPLEMENTS",
+        "BLOOD_OXIMETER", "BP_CUFF", "BP_MONITOR", "ECG_MONITOR",
+        "ECG_ELECTRODES_12", "IV_CATHETER", "IV_ADMIN_SET", "ERTAPENEM_1G",
+        "ACETAMINOPHEN_325MG", "ZOLPIDEM_5MG", "SERTRALINE_50MG",
+        "VARIABLE_OXYGEN_SYSTEM", "PSYCHOTHERAPY", "BLOOD_OXIMETER",
     ],
 }
 
@@ -144,7 +144,7 @@ ANOMALIES: Mapping[str, Anomaly] = {
             conditions=("SEPSIS", "RESPIRATORY_INFECTION_LOWER"),
         ),
         _anomaly("hypercapnia", {"cabin_ppco2_mmhg": 8.0}, "red", "CABIN_CO2_HIGH",
-                 conditions=("HYPERCAPNIA",)),
+                 conditions=("CO2_HEADACHE",)),
         _anomaly("sans_like", {"iop_mmhg": 24.0}, "yellow", "IOP_HIGH",
                  conditions=("SANS",)),
     )

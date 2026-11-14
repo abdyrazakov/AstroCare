@@ -30,3 +30,13 @@ curl -X POST localhost:8765/ask -H 'Content-Type: application/json' \
 The frontend AI Assistant tab may call this HTTP endpoint directly.
 
 Mission history is available at `/log?astronaut_id=ASTRO-01` and `/report?astronaut_id=ASTRO-01`; append `format=text` for an SBAR summary.
+
+## Ollama on a GPU laptop
+
+These are Ollama settings, not AstroBrain code: set `OLLAMA_KEEP_ALIVE=24h` and
+`OLLAMA_FLASH_ATTENTION=1`, then verify `ollama ps` reports the model at 100% GPU.
+Warm the model before the demo; the expected first recommendation has
+`doctorSource: "llm"` within roughly three seconds.
+
+For Mars operations, use the single wording “up to ~22 minutes one way” for
+communication delay. Source: NASA Mars facts — VERIFY.

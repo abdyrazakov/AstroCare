@@ -162,8 +162,8 @@ IMM_PRIORS: MappingProxyType[str, PhasePrior] = MappingProxyType({
         status=STATUS_VERIFIED,
         note="phase_2 = 0 means no new onset in phase 2, not zero ongoing cases.",
     ),
-    "HYPERCAPNIA": PhasePrior(
-        code="HYPERCAPNIA",
+    "CO2_HEADACHE": PhasePrior(
+        code="CO2_HEADACHE",
         emcl_name="Headache - CO2 (ICL64)",
         mechanism=MECHANISM_GENERAL,
         measure="rate",
@@ -172,11 +172,7 @@ IMM_PRIORS: MappingProxyType[str, PhasePrior] = MappingProxyType({
         rate_per_year=1.5168169,
         basis="69/45.49 = 1.5168169 events/person-year (CO2-induced headache); general split",
         status=STATUS_DERIVED,
-        note=(
-            "This code is currently named HYPERCAPNIA but maps to EMCL "
-            "'Headache - CO2' (ICL64), not a distinct hypercapnia condition; "
-            "a code rename is planned."
-        ),
+        note="Code rename applied: follows EMCL 'Headache - CO2' (ICL64); not a distinct hypercapnia condition.",
     ),
     "RESPIRATORY_INFECTION_LOWER": PhasePrior(
         code="RESPIRATORY_INFECTION_LOWER",

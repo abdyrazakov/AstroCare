@@ -31,7 +31,7 @@ EXPECTED_COUNTS = {
     "CARDIAC_ARRHYTHMIA": 8,  # report 5.5
     "SLEEP_DISORDER": 1,  # report 5.6: Zolpidem only
     "DEPRESSION": 3,  # report 5.7
-    "HYPERCAPNIA": 3,  # report 5.8 (CO2_HEADACHE)
+    "CO2_HEADACHE": 3,  # report 5.8 (CO2_HEADACHE)
     "SANS": 4,  # report 5.9: CRT prose, no RT, no published counts
     "RESPIRATORY_INFECTION_LOWER": 5,  # report 5.10
     "ALTITUDE_SICKNESS": 0,  # report 5.11: NOT FOUND

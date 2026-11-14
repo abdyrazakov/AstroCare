@@ -132,8 +132,8 @@ CONDITION_RULES: tuple[ConditionRule, ...] = (
         ),
     ),
     ConditionRule(
-        code="HYPERCAPNIA",
-        label="Hypercapnia / elevated cabin CO₂ exposure",
+        code="CO2_HEADACHE",
+        label="CO2-induced headache (EMCL ICL64 Headache – CO2)",
         saturation=1.0,
         weights=(("CABIN_CO2_HIGH", 0.70), ("CABIN_CO2_ELEVATED", 0.40), ("PVT_SLOW", 0.15), ("RESP_HIGH", 0.10)),
     ),
@@ -195,7 +195,7 @@ def _score(
         evidence=CONDITION_EVIDENCE_BY_CODE[rule.code],
         phase_adjusted=multiplier != 1.0,
         resources=resource_details(rule.code, medical_kit),
-        onboard_capability=capability(resource_details(rule.code, medical_kit)),
+        onboard_capability=capability(rule.code, resource_details(rule.code, medical_kit)),
     )
 
 

@@ -100,8 +100,8 @@ def _resource_sentence(assessment: _AssessmentLike) -> str:
         resources = getattr(condition, "resources", ())
         if not capability or capability.get("status") == "unknown":
             continue
-        onboard = [str(item["code"]) for item in resources if item.get("onboard") is True]
-        missing = [str(item["code"]) for item in resources if item.get("onboard") is False]
+        onboard = [str(item.get("name", item["code"])) for item in resources if item.get("onboard") is True]
+        missing = [str(item.get("name", item["code"])) for item in resources if item.get("onboard") is False]
         parts = []
         if onboard:
             parts.append(f"Onboard: {', '.join(onboard)}.")

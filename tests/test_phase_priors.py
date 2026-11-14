@@ -24,12 +24,12 @@ GENERAL_CODES = (
     "SEPSIS",
     "CARDIAC_ARRHYTHMIA",
     "DEPRESSION",
-    "HYPERCAPNIA",
+    "CO2_HEADACHE",
     "RESPIRATORY_INFECTION_LOWER",
 )
 NOT_FOUND_CODES = ("ALTITUDE_SICKNESS", "NUTRITIONAL_DEFICIT")
 LOW_TIER_CODES = ("SEPSIS", "HYPOVOLEMIC_SHOCK", "CARDIAC_ARRHYTHMIA", "DEPRESSION")
-HIGH_TIER_CODES = ("RESPIRATORY_INFECTION_LOWER", "HYPERCAPNIA")
+HIGH_TIER_CODES = ("RESPIRATORY_INFECTION_LOWER", "CO2_HEADACHE")
 
 
 def test_every_conditions_rule_code_has_a_record() -> None:
@@ -94,7 +94,7 @@ def test_cardiac_arrhythmia_phase_values_match_report() -> None:
 
 
 def test_hypercapnia_maps_to_co2_headache_in_report() -> None:
-    record = prior_record("HYPERCAPNIA")
+    record = prior_record("CO2_HEADACHE")
     assert record is not None
     assert record.emcl_name == "Headache - CO2 (ICL64)"
     assert record.phase_1 == pytest.approx(0.02078, rel=1e-3)

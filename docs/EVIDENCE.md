@@ -61,7 +61,9 @@ they do not turn operational prototype cutoffs into validated clinical rules.
 | IOP_HIGH | >21 mmHg | OCHMO/HRP SANS context | Ocular hypertension | VERIFY | Common screening boundary; astronaut threshold pending. |
 | PHQ2_POSITIVE | ≥3 | Kroenke et al. 2003, J Gen Intern Med | 41(11):1284–92 | VERIFIED | Screening flag; not a diagnosis. |
 | daily plans | exercise/nutrition plan bands | NASA SP-20250000273; NTRS 20110016265; JSC-63555 | VERIFY | DESIGN DECISION | Operational plan generation pending mission-specific review. |
-| HYPERCAPNIA | weighted prototype | NASA OCHMO-TB-004 / Law et al. 2014 | VERIFY | VERIFY | Condition name not confirmed in EMCL. |
+| CO2_HEADACHE | weighted prototype | EMCL ICL64 Headache - CO2; CliFF RT p.8 | CliFF 2020 | VERIFIED | Code and resource source wired. |
 | SANS | weighted prototype | NASA HRP Risk of SANS | VERIFY | VERIFY | EMCL name “VIIP” not confirmed. |
-| IMM phase priors | listed multipliers | Researcher incidence table pending | phase_priors.py | DESIGN DECISION | Replace when phase frequencies are supplied. |
-| medical-kit resources | provisional mapping | ISS medical kit / EMCL treatment resources | VERIFY | VERIFY | Researcher confirmation pending. |
+| IMM phase priors | listed multipliers | `docs/EVIDENCE_IMM.md` | §1 | DERIVED | Derived from the merged research register. |
+| medical-kit resources | canonical CliFF Essential rows | `docs/EVIDENCE_IMM.md` | §3 | VERIFIED | RT/CRT status is explicit per condition. |
+| IMM/CliFF register | phase priors and canonical resources | `docs/EVIDENCE_IMM.md` | §§1–3 | DERIVED / VERIFIED | Detailed provenance and legacy map. |
+| Mars communication delay | up to ~22 minutes one way | NASA Mars facts | — | VERIFY | Mission-operations context only. |
