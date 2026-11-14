@@ -45,6 +45,16 @@ Brain module (Scoring Engine + Doctor Layer) of the AstroCare system — NASA Sp
 The data pipeline (sensors/simulator producing input JSON) and the presentation UI are owned by
 separate repositories/teams; this repository only implements the brain in the middle.
 
+## Why AstroCare
+
+- Fully local, offline AI — Ollama `qwen2.5:7b-instruct`, 3 s timeout, rule-based fallback, background cache warm-up: `doctor/`.
+- ExMC-aligned IMM-lite condition ranking using the EMCL/IMM vocabulary — the real-time counterpart to ExMC IMPACT mission planning; not the IMM Monte Carlo, never a diagnosis: `conditions.py`.
+- Evidence register: every threshold mapped to a source with VERIFIED/VERIFY/ASSUMPTION/DESIGN DECISION status: [docs/EVIDENCE.md](docs/EVIDENCE.md).
+- Graceful degradation: model slow or down → complete, safe recommendation; `doctorSource` shown honestly: `doctor/layer.py`.
+- Contract-driven parallel teamwork: [AGENTS.md](AGENTS.md) is the only integration document; 435 tests, mock-data QA.
+
+Details and the honest limitations of each claim: [docs/WHY_ASTROCARE.md](docs/WHY_ASTROCARE.md).
+
 ## Quick start
 
 ```bash
@@ -218,6 +228,7 @@ Each built-in flag now includes `evidenceRef`; sources and verification status: 
   limits, instead of only an instantaneous dose rate.
 - Onboard medical-kit awareness in the generated recommendation.
 - PHQ-2 instead of the current ad-hoc single-number mood score.
+- Contract v0.2 freeze with the data/UI teams — agenda in [docs/CONTRACT_V02_PROPOSAL.md](docs/CONTRACT_V02_PROPOSAL.md).
 
 ## Medical disclaimer
 

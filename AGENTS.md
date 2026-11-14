@@ -162,7 +162,7 @@ One output object per processed input sample. Keys are **camelCase**.
 | `activeFlags` | array of string | Codes of all flags currently active (same order as `flagDetails`). Empty array when everything is nominal. |
 | `flagDetails` | array of object | One entry per active flag: `code`, `severity` (`"yellow"` or `"red"`), human-readable `message`, the measured `value` that triggered it and the `threshold` it was compared with (`value`/`threshold` may be `null` when there is no single number, e.g. `CONSCIOUSNESS_ALTERED`). |
 | `flagDetails[].evidenceRef` | string or null | Short source identifier; populated for every built-in flag. Verification status and limitations are in `docs/EVIDENCE.md`. |
-| `likelyConditions` | array of object | Ranked IMM-lite condition candidates, most likely first. One entry is `{code, label, confidence, drivers, evidenceRef}`: `confidence` is an evidence score in 0–1 (two decimals, **not** a calibrated probability), `drivers` are the active flag codes that contributed, `evidenceRef` points to `docs/EVIDENCE.md`. At most 3 entries; empty when nothing reaches the floor. Never a diagnosis. |
+| `likelyConditions` | array of object | **Experimental in v0.2:** condition names and weights are pending confirmation by the team's researcher; the field may change at the contract v0.2 freeze. UI must tolerate an empty list and unknown codes. Ranked IMM-lite condition candidates, most likely first. One entry is `{code, label, confidence, drivers, evidenceRef}`: `confidence` is an evidence score in 0–1 (two decimals, **not** a calibrated probability), `drivers` are the active flag codes that contributed, `evidenceRef` points to `docs/EVIDENCE.md`. At most 3 entries; empty when nothing reaches the floor. Never a diagnosis. |
 | `doctorRecommendation` | string | 2–4 sentences of plain-language guidance for the crew. Always present, even at green. |
 | `doctorSource` | `"llm"` \| `"cache"` \| `"fallback"` | Where the recommendation came from: live language model, a cached answer for an identical flag set, or a built-in rule-based text when the model is unavailable. Presentation may show this as a small badge; it does not change how the text should be displayed. |
 
@@ -202,6 +202,10 @@ Rule for the UI: **`alertLevel` = worst severity among active flags; no flags �
 the flags on the presentation side; read `alertLevel` directly.
 
 ### Likely conditions — IMM-lite
+
+**Experimental in v0.2:** condition names and weights are pending confirmation by the team's
+researcher; the field may change at the contract v0.2 freeze. UI must tolerate an empty list and
+unknown codes.
 
 `likelyConditions` is a prototype, ExMC-informed ranking of **possible** conditions to watch. It
 reuses the condition vocabulary of the Exploration Medical Condition List (EMCL, JSC-65722) and the
