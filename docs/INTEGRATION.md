@@ -1,4 +1,4 @@
-# AstroCare v0.3 integration
+# AstroCare v0.6 integration
 
 Run the three repositories locally:
 

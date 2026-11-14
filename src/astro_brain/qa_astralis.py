@@ -74,7 +74,9 @@ def run(path: str, mission_seconds: int, step: int) -> list[dict[str, object]]:
                             "PVT_SLOW": tick.get("pvt_slowest10_rt"),
                             "RADIATION_ELEVATED": tick.get("radiation_dose_rate"),
                             "RADIATION_CRITICAL": tick.get("radiation_dose_rate"),
-                            "EXERCISE_DEFICIT": tick.get("hr"),
+                            "EXERCISE_DEFICIT": (
+                                daily_by_key.get((astronaut, tick.get("mission_day"))) or {}
+                            ).get("ared_exercise_completed"),
                             "CO2_HEADACHE": tick.get("cabin_ppco2"),
                             "SANS": tick.get("iop_mmhg"),
                             "ACUTE_RADIATION_SYNDROME": tick.get("radiation_dose_rate"),

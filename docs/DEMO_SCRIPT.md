@@ -1,4 +1,4 @@
-# v0.5 demo script
+# v0.6 demo script
 
 Use `OLLAMA_KEEP_ALIVE=24h` and `OLLAMA_FLASH_ATTENTION=1` when running Ollama-backed demonstrations; these are Ollama settings, not AstroBrain code. Start the brain with `python -m astro_brain.dashboard --port 8766 --ws-port 8787`, start the AstroCare frontend with `NEXT_PUBLIC_BRAIN_WS_URL=ws://localhost:8787 npm run dev`, and feed Astralis with its interpreter and `PYTHONPATH=src`.
 

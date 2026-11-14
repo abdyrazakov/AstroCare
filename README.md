@@ -51,7 +51,7 @@ separate repositories/teams; this repository only implements the brain in the mi
 - ExMC-aligned IMM-lite condition ranking using the EMCL/IMM vocabulary — the real-time counterpart to ExMC IMPACT mission planning; not the IMM Monte Carlo, never a diagnosis: `conditions.py`.
 - Evidence register: every threshold mapped to a source with VERIFIED/VERIFY/ASSUMPTION/DESIGN DECISION status: [docs/EVIDENCE.md](docs/EVIDENCE.md).
 - Graceful degradation: model slow or down → complete, safe recommendation; `doctorSource` shown honestly: `doctor/layer.py`.
-- Contract-driven parallel teamwork: [AGENTS.md](AGENTS.md) is the only integration document; 435 tests, mock-data QA.
+- Contract-driven parallel teamwork: [AGENTS.md](AGENTS.md) is the only integration document; the current suite has 613 tests, with mock-data QA.
 
 Details and the honest limitations of each claim: [docs/WHY_ASTROCARE.md](docs/WHY_ASTROCARE.md).
 
@@ -215,9 +215,10 @@ examples/             sample input/output JSON for manual testing and docs
 
 ## Status & roadmap
 
-**Done:** contract validation, NEWS2/radiation/lifestyle scoring, IMM-lite condition ranking
-(`likelyConditions`), the Doctor Layer (cache, 3 s timeout, fallback, background upgrade), the
-debug dashboard, the mock-data QA runner. 435 tests passing, QA 24/24.
+**Done:** contract validation, NEWS2/radiation/lifestyle/environment scoring, IMM-lite condition
+ranking (`likelyConditions`), phase priors and CliFF resources, plans and mission reports, the
+Doctor Layer (cache, timeout, fallback, background upgrade), the HTTP/WebSocket dashboard, the
+Astralis/AstroCare adapters, and the mock-data QA runner. 613 tests passing, QA 24/24.
 Each built-in flag now includes `evidenceRef`; sources and verification status: [docs/EVIDENCE.md](docs/EVIDENCE.md).
 
 **Next (planned, not implemented):**
