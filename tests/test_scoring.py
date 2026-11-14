@@ -17,6 +17,8 @@ def test_assess_on_nominal_sample_is_green_with_zero_flags(nominal_sample):
     assert result.news2_total == 0
     assert result.flags == ()
     assert result.flag_codes() == ()
+    assert result.likely_conditions == ()
+    assert result.condition_codes() == ()
     assert result.timestamp == "2026-11-14T10:00:00Z"
     assert result.astronaut_id == "ASTRO-01"
 
@@ -74,6 +76,15 @@ def test_flag_codes_are_sorted_and_unique(nominal_sample):
     codes = result.flag_codes()
     assert codes == tuple(sorted(codes))
     assert len(codes) == len(set(codes))
+
+
+def test_assessment_ranks_imm_lite_conditions_for_a_degraded_sample(nominal_sample):
+    sample = nominal_sample(hr=135, resp_rate=26, temp_c=39.5, spo2=93)
+    result = assess(sample)
+    codes = result.condition_codes()
+    assert "SEPSIS" in codes
+    assert "HYPOXEMIA" in codes
+    assert codes == tuple(condition.code for condition in result.likely_conditions)
 
 
 def test_assessment_is_immutable(nominal_sample):

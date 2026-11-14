@@ -22,6 +22,10 @@ Brain module (Scoring Engine + Doctor Layer) of the AstroCare system — NASA Sp
         +-------------------------------+
                         |
                         v
+              IMM-lite (conditions.py)
+        ranked condition candidates from flags
+                        |
+                        v
                   Doctor Layer
         +-------------------------------+
         | cache -> Ollama (3s timeout)  |
@@ -115,6 +119,15 @@ Compact output example (`examples/output_radiation_storm.json`):
       "threshold": 1000.0
     }
   ],
+  "likelyConditions": [
+    {
+      "code": "ACUTE_RADIATION_SYNDROME",
+      "label": "Acute radiation syndrome / radiation sickness",
+      "confidence": 0.69,
+      "drivers": ["RADIATION_CRITICAL"],
+      "evidenceRef": "ExMC EMCL/IMM condition vocabulary (JSC-65722; NASA IMM); evidence score is a prototype design decision, not a calibrated probability — VERIFY"
+    }
+  ],
   "doctorRecommendation": "IMMEDIATE ACTION REQUIRED. Radiation dose rate is critical; move to the most shielded area immediately. Contact ground medical now.",
   "doctorSource": "fallback"
 }
@@ -130,10 +143,21 @@ Compact output example (`examples/output_radiation_storm.json`):
 | Calories | `caloric_intake` < 70% of `caloric_target` | yellow |
 | Sleep | `sleep_hours` < 6 | yellow |
 | Mood | `mood_score` ≤ 4 | yellow |
+| IMM-lite conditions | deterministic evidence score over the active flags; emit top 3 at confidence ≥ 0.25 | informational (never a diagnosis) |
 
-`alertLevel` is the worst severity among active flags (no flags → `green`). Only `NEWS2_HIGH`
-(NEWS2 total ≥ 7) and `RADIATION_CRITICAL` can turn a sample red. See AGENTS.md section 3 for the
-full flag-code table.
+`alertLevel` is the worst severity among active flags (no flags → `green`). Only `NEWS2_HIGH`,
+`RADIATION_CRITICAL`, and the two cumulative radiation limits at 100% can turn a sample red. See
+AGENTS.md section 3 for the full flag-code table.
+
+## IMM-lite condition ranking
+
+The brain reuses the ExMC Exploration Medical Condition List (EMCL, JSC-65722) and Integrated
+Medical Model (IMM) **condition vocabulary**, but replaces IMM's Monte Carlo mission simulation
+with a transparent, deterministic score over the flags it already computed: each condition has
+weighted flag drivers, `confidence = min(1, Σ weights / saturation)`, at most three candidates are
+returned, and `drivers` shows exactly which flags contributed. This is differential support
+("conditions to watch"), not the IMM, not a calibrated probability, and never a diagnosis.
+Sources and limitations: [docs/EVIDENCE.md](docs/EVIDENCE.md).
 
 ## Doctor Layer
 
@@ -165,6 +189,7 @@ src/astro_brain/
   lifestyle.py        lifestyle/operational flags: exercise, calories, sleep, mood
   vitals_flags.py     per-component and aggregate NEWS2 flags
   scoring.py          top-level pure scoring entry point (assess)
+  conditions.py       IMM-lite: rank EMCL/IMM condition candidates from active flags
   pipeline.py         Brain: wires contract validation, scoring and the Doctor Layer
   mock.py             mock vitals data matching the input contract
   qa.py               offline end-to-end QA runner over mock scenarios
@@ -180,9 +205,9 @@ examples/             sample input/output JSON for manual testing and docs
 
 ## Status & roadmap
 
-**Done:** contract validation, NEWS2/radiation/lifestyle scoring, the Doctor Layer (cache,
-3 s timeout, fallback, background upgrade), the debug dashboard, the mock-data QA runner.
-335 tests passing, QA 24/24.
+**Done:** contract validation, NEWS2/radiation/lifestyle scoring, IMM-lite condition ranking
+(`likelyConditions`), the Doctor Layer (cache, 3 s timeout, fallback, background upgrade), the
+debug dashboard, the mock-data QA runner. 435 tests passing, QA 24/24.
 Each built-in flag now includes `evidenceRef`; sources and verification status: [docs/EVIDENCE.md](docs/EVIDENCE.md).
 
 **Next (planned, not implemented):**
@@ -191,8 +216,6 @@ Each built-in flag now includes `evidenceRef`; sources and verification status: 
   NASA-STD-3001 Vol. 1 radiation limits, Barger et al. (2014) for sleep, JSC-63555 for nutrition.
 - Reworking the radiation module around cumulative dose against NASA-STD-3001 30-day/career
   limits, instead of only an instantaneous dose rate.
-- IMM/EMCL-informed condition candidates (ExMC IMPACT-style framing) fed into the Doctor Layer's
-  prompt context.
 - Onboard medical-kit awareness in the generated recommendation.
 - PHQ-2 instead of the current ad-hoc single-number mood score.
 

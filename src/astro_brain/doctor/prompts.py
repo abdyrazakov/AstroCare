@@ -19,7 +19,9 @@ SYSTEM_PROMPT = (
     "Include one concrete action for every active flag; address all flags, combining "
     "related actions in a sentence when needed. The final sentence must state when "
     "to contact ground medical. Never state or imply a diagnosis. Never use markdown "
-    "or a preamble; respond with advice only. Never repeat input numbers."
+    "or a preamble; respond with advice only. Never repeat input numbers. You may also "
+    "receive likelyConditions: ranked possibilities, never diagnoses; use them only to "
+    "prioritize monitoring and never present them as confirmed."
 )
 
 
@@ -37,6 +39,9 @@ def build_user_prompt(assessment: _AssessmentLike) -> str:
         "alertLevel": assessment.alert_level,
         "news2Score": assessment.news2_total,
         "flags": [flag.to_dict() for flag in assessment.flags],
+        "likelyConditions": [
+            condition.to_dict() for condition in getattr(assessment, "likely_conditions", ())
+        ],
     }
     codes = ", ".join(flag.code for flag in assessment.flags)
     return f"Flags to address (all of them): {codes}\n" + json.dumps(

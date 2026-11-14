@@ -54,6 +54,7 @@ CONTRACT_OUTPUT_KEYS = {
     "news2Score",
     "activeFlags",
     "flagDetails",
+    "likelyConditions",
     "doctorRecommendation",
     "doctorSource",
 }
@@ -76,6 +77,7 @@ def test_nominal_sample_is_green_with_no_flags_and_fallback_source():
     # Assert
     assert output["alertLevel"] == "green"
     assert output["activeFlags"] == []
+    assert output["likelyConditions"] == []
     assert output["doctorSource"] == "fallback"
     assert set(output.keys()) == CONTRACT_OUTPUT_KEYS
 
@@ -93,6 +95,11 @@ def test_red_sample_has_red_alert_level_and_contract_shaped_output():
     assert set(output.keys()) == CONTRACT_OUTPUT_KEYS
     assert output["astronautId"] == "ASTRO-02"
     assert output["timestamp"] == "2026-11-14T10:05:00Z"
+    assert output["likelyConditions"]
+    for condition in output["likelyConditions"]:
+        assert set(condition.keys()) == {
+            "code", "label", "confidence", "drivers", "evidenceRef",
+        }
     for detail in output["flagDetails"]:
         assert set(detail.keys()) == {"code", "severity", "message", "value", "threshold", "evidenceRef"}
 

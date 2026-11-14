@@ -49,6 +49,11 @@ def test_every_anomaly_matches_its_expected_outcome_under_assess(name):
     codes = set(result.flag_codes())
     missing = anomaly.expected_codes - codes
     assert not missing, f"{name}: expected codes {sorted(missing)} missing from {sorted(codes)}"
+    missing_conditions = anomaly.expected_conditions - set(result.condition_codes())
+    assert not missing_conditions, (
+        f"{name}: expected conditions {sorted(missing_conditions)} missing from "
+        f"{sorted(result.condition_codes())}"
+    )
 
 
 def test_apply_anomaly_does_not_mutate_input():

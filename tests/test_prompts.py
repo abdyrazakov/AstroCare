@@ -43,6 +43,23 @@ def test_build_user_prompt_is_valid_compact_json_with_expected_keys():
             "threshold": 100,
         }
     ]
+    assert parsed["likelyConditions"] == []
+
+
+def test_build_user_prompt_includes_likely_conditions():
+    from conftest import FakeCondition
+
+    condition = FakeCondition(
+        code="SLEEP_DISORDER",
+        label="Sleep disorder",
+        confidence=0.88,
+        drivers=("SLEEP_DEFICIT",),
+    )
+    assessment = make_assessment(likely_conditions=(condition,))
+
+    parsed = json.loads(build_user_prompt(assessment).split("\n", 1)[1])
+
+    assert parsed["likelyConditions"] == [condition.to_dict()]
 
 
 def test_build_user_prompt_with_no_flags_is_empty_list():

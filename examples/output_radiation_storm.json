@@ -12,7 +12,19 @@
       "severity": "red",
       "message": "Radiation dose rate 1500.0 \u00b5Sv/h is at or above the 1000 \u00b5Sv/h critical threshold; seek shielding immediately.",
       "value": 1500.0,
-      "threshold": 1000.0
+      "threshold": 1000.0,
+      "evidenceRef": "Design thresholds; NOAA SWPC S2/S3; ISS background 12\u201330 \u00b5Sv/h \u2014 VERIFY"
+    }
+  ],
+  "likelyConditions": [
+    {
+      "code": "ACUTE_RADIATION_SYNDROME",
+      "label": "Acute radiation syndrome / radiation sickness",
+      "confidence": 0.69,
+      "drivers": [
+        "RADIATION_CRITICAL"
+      ],
+      "evidenceRef": "ExMC EMCL/IMM condition vocabulary (JSC-65722; NASA IMM); evidence score is a prototype design decision, not a calibrated probability \u2014 VERIFY"
     }
   ],
   "doctorRecommendation": "IMMEDIATE ACTION REQUIRED. Radiation dose rate is critical; move to the most shielded area immediately. Contact ground medical now.",

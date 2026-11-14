@@ -15,6 +15,13 @@ CALORIC_REF = "JSC-63555 Nutritional Requirements — VERIFY; 70% cutoff is a de
 EXERCISE_REF = "ISS MORD exercise prescription — VERIFY; 50% cutoff is a design choice"
 MOOD_REF = "Ad hoc scale; planned replacement by PHQ-2 (Kroenke 2003), not implemented"
 
+# ExMC EMCL (JSC-65722) / IMM condition vocabulary, used for names only.
+# The likelihood score is a prototype design decision, not the IMM Monte Carlo model.
+IMM_LITE_REF = (
+    "ExMC EMCL/IMM condition vocabulary (JSC-65722; NASA IMM); "
+    "evidence score is a prototype design decision, not a calibrated probability — VERIFY"
+)
+
 EVIDENCE_BY_CODE = MappingProxyType({
     "HR_HIGH": NEWS2_REF,
     "HR_LOW": NEWS2_REF,
@@ -36,4 +43,18 @@ EVIDENCE_BY_CODE = MappingProxyType({
     "CALORIC_DEFICIT": CALORIC_REF,
     "SLEEP_DEFICIT": SLEEP_REF,
     "LOW_MOOD": MOOD_REF,
+})
+
+CONDITION_EVIDENCE_BY_CODE = MappingProxyType({
+    code: IMM_LITE_REF
+    for code in (
+        "HYPOVOLEMIA",
+        "SEPSIS",
+        "HYPOXEMIA",
+        "ACUTE_RADIATION_SYNDROME",
+        "CARDIAC_ARRHYTHMIA",
+        "SLEEP_DISORDER",
+        "DEPRESSION",
+        "NUTRITIONAL_DEFICIT",
+    )
 })

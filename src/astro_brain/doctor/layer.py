@@ -12,10 +12,10 @@ requirement):
 
 1. ``enabled=False`` -> always the rule-based fallback, source ``"fallback"``, the
    client is never called.
-2. Green with no active flags -> the nominal fallback text, source ``"fallback"``,
-   no LLM call (a known-nominal state needs no model opinion).
-3. Identical ``(alert_level, flag_codes)`` seen before -> the cached text, source
-   ``"cache"``. This is the debounce: the same flag combination never re-queries
+2. Green with no active flags and no likely conditions -> the nominal fallback text,
+   source ``"fallback"``, no LLM call (a known-nominal state needs no model opinion).
+3. Identical ``(alert_level, flag_codes, condition_codes)`` seen before -> the cached
+   text, source ``"cache"``. This is the debounce: the same picture never re-queries
    the LLM while it is cached.
 4. On a cache miss, the cache key is atomically claimed in ``_in_flight`` (under
    ``_lock``) *before* the synchronous client call, and released once that call
@@ -60,7 +60,7 @@ _WHITESPACE_RE = re.compile(r"\s+")
 
 RecommendationSource = Literal["llm", "cache", "fallback"]
 
-CacheKey = tuple[str, tuple[str, ...]]
+CacheKey = tuple[str, tuple[str, ...], tuple[str, ...]]
 
 
 @dataclass(frozen=True)
@@ -80,10 +80,17 @@ class _AssessmentLike(Protocol):
     flags: tuple[_FlagLike, ...]
 
     def flag_codes(self) -> tuple[str, ...]: ...
-
-
 class _ClientLike(Protocol):
     def generate(self, system: str, user: str, timeout_s: float | None = None) -> str: ...
+
+
+def _condition_codes(assessment: _AssessmentLike) -> tuple[str, ...]:
+    """Ranked condition codes when the assessment carries IMM-lite candidates."""
+    getter = getattr(assessment, "condition_codes", None)
+    if callable(getter):
+        return tuple(getter())
+    conditions = getattr(assessment, "likely_conditions", ())
+    return tuple(condition.code for condition in conditions)
 
 
 class DoctorLayer:
@@ -120,8 +127,8 @@ class DoctorLayer:
 
     @staticmethod
     def cache_key(assessment: _AssessmentLike) -> CacheKey:
-        """``(alert_level, flag_codes)`` -- identical flag combinations share a key."""
-        return (assessment.alert_level, assessment.flag_codes())
+        """``(alert_level, flag_codes, condition_codes)`` -- identical pictures share a key."""
+        return (assessment.alert_level, assessment.flag_codes(), _condition_codes(assessment))
 
     def recommend(self, assessment: _AssessmentLike) -> Recommendation:
         """Return a recommendation for ``assessment``; see module docstring for rules."""

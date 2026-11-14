@@ -9,6 +9,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 
+from astro_brain.conditions import LikelyCondition, likely_conditions
 from astro_brain.contract import VitalsSample
 from astro_brain.flags import AlertLevel, Flag, alert_level_from_flags
 from astro_brain.lifestyle import lifestyle_flags
@@ -27,14 +28,19 @@ class Assessment:
     news2_total: int
     news2_components: Mapping[str, int]
     flags: tuple[Flag, ...]
+    likely_conditions: tuple[LikelyCondition, ...]
 
     def flag_codes(self) -> tuple[str, ...]:
         """Sorted, unique codes of all active flags."""
         return tuple(sorted({flag.code for flag in self.flags}))
 
+    def condition_codes(self) -> tuple[str, ...]:
+        """Condition codes in ranked order (most likely first)."""
+        return tuple(condition.code for condition in self.likely_conditions)
+
 
 def assess(sample: VitalsSample) -> Assessment:
-    """Score ``sample``: NEWS2 -> vitals/radiation/lifestyle flags -> alert level."""
+    """Score ``sample``: NEWS2 -> vitals/radiation/lifestyle flags -> IMM-lite conditions."""
     news2 = compute_news2(sample)
     flags = vitals_flags(news2, sample) + radiation_flags(sample) + lifestyle_flags(sample)
     return Assessment(
@@ -44,4 +50,5 @@ def assess(sample: VitalsSample) -> Assessment:
         news2_total=news2.total,
         news2_components=news2.components,
         flags=flags,
+        likely_conditions=likely_conditions(flags),
     )

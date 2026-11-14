@@ -79,7 +79,7 @@ def test_stats_start_at_zero():
     }
 
 
-def test_cache_key_is_alert_level_and_flag_codes():
+def test_cache_key_is_alert_level_flag_codes_and_condition_codes():
     assessment = make_assessment(
         alert_level="red",
         flags=(
@@ -88,7 +88,24 @@ def test_cache_key_is_alert_level_and_flag_codes():
         ),
     )
 
-    assert DoctorLayer.cache_key(assessment) == ("red", assessment.flag_codes())
+    assert DoctorLayer.cache_key(assessment) == ("red", assessment.flag_codes(), ())
+
+
+def test_cache_key_separates_assessments_with_different_condition_codes():
+    from conftest import FakeCondition
+
+    first = make_assessment(
+        alert_level="yellow",
+        flags=_flagged(),
+        likely_conditions=(FakeCondition("SEPSIS"),),
+    )
+    second = make_assessment(
+        alert_level="yellow",
+        flags=_flagged(),
+        likely_conditions=(FakeCondition("HYPOXEMIA"),),
+    )
+
+    assert DoctorLayer.cache_key(first) != DoctorLayer.cache_key(second)
 
 
 

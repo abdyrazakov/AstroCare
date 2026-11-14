@@ -68,42 +68,62 @@ class Anomaly:
     overrides: Mapping[str, Any]
     expected_level: Literal["yellow", "red"]
     expected_codes: frozenset[str]
+    expected_conditions: frozenset[str] = frozenset()
 
 
 def _anomaly(
-    name: str, overrides: Mapping[str, Any], level: Literal["yellow", "red"], *codes: str
+    name: str,
+    overrides: Mapping[str, Any],
+    level: Literal["yellow", "red"],
+    *codes: str,
+    conditions: tuple[str, ...] = (),
 ) -> Anomaly:
-    return Anomaly(name=name, overrides=overrides, expected_level=level, expected_codes=frozenset(codes))
+    return Anomaly(
+        name=name,
+        overrides=overrides,
+        expected_level=level,
+        expected_codes=frozenset(codes),
+        expected_conditions=frozenset(conditions),
+    )
 
 
 ANOMALIES: Mapping[str, Anomaly] = {
     anomaly.name: anomaly
     for anomaly in (
         _anomaly("dose_30day_warning", {"radiation_dose_30day_msv": _WARNING_30DAY_MSV},
-                 "yellow", "RADIATION_30DAY_LIMIT"),
+                 "yellow", "RADIATION_30DAY_LIMIT",
+                 conditions=("ACUTE_RADIATION_SYNDROME",)),
         _anomaly("career_limit_exceeded", {"radiation_dose_career_msv": _EXCEEDED_CAREER_MSV},
                  "red", "RADIATION_CAREER_LIMIT"),
-        _anomaly("tachycardia", {"hr": 125}, "yellow", "HR_HIGH"),
-        _anomaly("hypoxia", {"spo2": 89}, "yellow", "SPO2_LOW", "NEWS2_MEDIUM"),
+        _anomaly("tachycardia", {"hr": 125}, "yellow", "HR_HIGH",
+                 conditions=("CARDIAC_ARRHYTHMIA",)),
+        _anomaly("hypoxia", {"spo2": 89}, "yellow", "SPO2_LOW", "NEWS2_MEDIUM",
+                 conditions=("HYPOXEMIA",)),
         _anomaly(
             "hypotension",
             {"bp": {"systolic": 88, "diastolic": 55}},
             "yellow",
             "BP_LOW",
             "NEWS2_MEDIUM",
+            conditions=("HYPOVOLEMIA",),
         ),
         _anomaly("fever", {"temp_c": 39.4}, "yellow", "TEMP_HIGH"),
-        _anomaly("radiation_storm", {"radiation_dose_rate": 1500.0}, "red", "RADIATION_CRITICAL"),
+        _anomaly("radiation_storm", {"radiation_dose_rate": 1500.0}, "red", "RADIATION_CRITICAL",
+                 conditions=("ACUTE_RADIATION_SYNDROME",)),
         _anomaly("radiation_elevated", {"radiation_dose_rate": 250.0}, "yellow", "RADIATION_ELEVATED"),
-        _anomaly("sleep_deprivation", {"sleep_hours": 4.0}, "yellow", "SLEEP_DEFICIT"),
-        _anomaly("low_mood", {"mood_score": 3}, "yellow", "LOW_MOOD"),
-        _anomaly("caloric_deficit", {"caloric_intake": 1500}, "yellow", "CALORIC_DEFICIT"),
+        _anomaly("sleep_deprivation", {"sleep_hours": 4.0}, "yellow", "SLEEP_DEFICIT",
+                 conditions=("SLEEP_DISORDER",)),
+        _anomaly("low_mood", {"mood_score": 3}, "yellow", "LOW_MOOD",
+                 conditions=("DEPRESSION",)),
+        _anomaly("caloric_deficit", {"caloric_intake": 1500}, "yellow", "CALORIC_DEFICIT",
+                 conditions=("NUTRITIONAL_DEFICIT",)),
         _anomaly("exercise_deficit", {"exercise_minutes_today": 30}, "yellow", "EXERCISE_DEFICIT"),
         _anomaly(
             "sepsis_like",
             {"hr": 135, "resp_rate": 26, "temp_c": 39.5, "spo2": 93},
             "red",
             "NEWS2_HIGH",
+            conditions=("SEPSIS", "HYPOXEMIA", "CARDIAC_ARRHYTHMIA"),
         ),
     )
 }

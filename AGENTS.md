@@ -11,8 +11,8 @@ brain and exactly what comes out. You never need to open our source code.
 Three teams work in parallel on three independent zones. The **data team** produces vitals
 samples (from sensors, a simulator, or a mock) as JSON matching the *input contract* below and
 hands them to the brain. The **brain** (this repository: Scoring Engine + Doctor Layer) validates
-each sample, computes a NEWS2 score and a set of clinical/operational flags, derives a single
-`alertLevel`, and attaches a short doctor recommendation. The **presentation team** consumes the
+each sample, computes a NEWS2 score and a set of clinical/operational flags, ranks IMM-lite
+condition candidates, derives a single `alertLevel`, and attaches a short doctor recommendation. The **presentation team** consumes the
 brain's *output contract* JSON and renders it (dashboard, alerts, history); it never computes
 medical logic itself. Each zone can be developed and tested without the other two as long as
 both contracts are respected.
@@ -139,6 +139,15 @@ One output object per processed input sample. Keys are **camelCase**.
       "evidenceRef": "Barger et al. 2014, Lancet Neurol, Table 2; 6 h cutoff is a design choice"
     }
   ],
+  "likelyConditions": [
+    {
+      "code": "SLEEP_DISORDER",
+      "label": "Sleep disorder",
+      "confidence": 0.88,
+      "drivers": ["SLEEP_DEFICIT"],
+      "evidenceRef": "ExMC EMCL/IMM condition vocabulary (JSC-65722; NASA IMM); evidence score is a prototype design decision, not a calibrated probability — VERIFY"
+    }
+  ],
   "doctorRecommendation": "Radiation is elevated but not critical; move to the shielded area until the dose rate drops. Sleep deficit may degrade reaction time, so schedule a rest period before any EVA tasks. Re-check vitals in 30 minutes.",
   "doctorSource": "llm"
 }
@@ -153,6 +162,7 @@ One output object per processed input sample. Keys are **camelCase**.
 | `activeFlags` | array of string | Codes of all flags currently active (same order as `flagDetails`). Empty array when everything is nominal. |
 | `flagDetails` | array of object | One entry per active flag: `code`, `severity` (`"yellow"` or `"red"`), human-readable `message`, the measured `value` that triggered it and the `threshold` it was compared with (`value`/`threshold` may be `null` when there is no single number, e.g. `CONSCIOUSNESS_ALTERED`). |
 | `flagDetails[].evidenceRef` | string or null | Short source identifier; populated for every built-in flag. Verification status and limitations are in `docs/EVIDENCE.md`. |
+| `likelyConditions` | array of object | Ranked IMM-lite condition candidates, most likely first. One entry is `{code, label, confidence, drivers, evidenceRef}`: `confidence` is an evidence score in 0–1 (two decimals, **not** a calibrated probability), `drivers` are the active flag codes that contributed, `evidenceRef` points to `docs/EVIDENCE.md`. At most 3 entries; empty when nothing reaches the floor. Never a diagnosis. |
 | `doctorRecommendation` | string | 2–4 sentences of plain-language guidance for the crew. Always present, even at green. |
 | `doctorSource` | `"llm"` \| `"cache"` \| `"fallback"` | Where the recommendation came from: live language model, a cached answer for an identical flag set, or a built-in rule-based text when the model is unavailable. Presentation may show this as a small badge; it does not change how the text should be displayed. |
 
@@ -187,8 +197,35 @@ Reference: ISS nominal background radiation is ~12–30 µSv/h, so a nominal sam
 trigger a radiation flag.
 
 Rule for the UI: **`alertLevel` = worst severity among active flags; no flags → `green`.** Only
-`NEWS2_HIGH` and `RADIATION_CRITICAL` can make a sample red. Do not recompute this from the
-flags on the presentation side; read `alertLevel` directly.
+`NEWS2_HIGH`, `RADIATION_CRITICAL`, `RADIATION_30DAY_LIMIT` (at ≥100% of its limit) and
+`RADIATION_CAREER_LIMIT` (at ≥100% of its limit) can make a sample red. Do not recompute this from
+the flags on the presentation side; read `alertLevel` directly.
+
+### Likely conditions — IMM-lite
+
+`likelyConditions` is a prototype, ExMC-informed ranking of **possible** conditions to watch. It
+reuses the condition vocabulary of the Exploration Medical Condition List (EMCL, JSC-65722) and the
+Integrated Medical Model (IMM), but it is **not** the IMM Monte Carlo model and it is **never a
+diagnosis**. It is a deterministic evidence score over the brain's own flags:
+
+- every condition has weighted flag `drivers`; `confidence = min(1, Σ weights / saturation)`;
+- a condition is emitted when `confidence ≥ 0.25` and it has enough drivers (SEPSIS needs ≥ 2);
+- at most 3 are returned, sorted by `confidence` descending, then by `code`;
+- `confidence` is relative evidence strength, not a probability of disease.
+
+| code | label | supporting flags |
+|---|---|---|
+| `HYPOVOLEMIA` | Hypovolemia / volume depletion | `BP_LOW`, `HR_HIGH`, `RESP_HIGH`, `CONSCIOUSNESS_ALTERED` |
+| `SEPSIS` | Sepsis | `TEMP_HIGH`, `TEMP_LOW`, `HR_HIGH`, `RESP_HIGH`, `BP_LOW`, `SPO2_LOW` (≥ 2 drivers) |
+| `HYPOXEMIA` | Hypoxemia / hypoxia | `SPO2_LOW`, `RESP_HIGH`, `RESP_LOW`, `CONSCIOUSNESS_ALTERED` |
+| `ACUTE_RADIATION_SYNDROME` | Acute radiation syndrome / radiation sickness | `RADIATION_CRITICAL`, `RADIATION_30DAY_LIMIT`, `RADIATION_CAREER_LIMIT`, `RADIATION_ELEVATED`, `TEMP_HIGH` |
+| `CARDIAC_ARRHYTHMIA` | De novo cardiac arrhythmia | `HR_HIGH`, `HR_LOW`, `BP_LOW`, `CONSCIOUSNESS_ALTERED` |
+| `SLEEP_DISORDER` | Sleep disorder | `SLEEP_DEFICIT`, `LOW_MOOD` |
+| `DEPRESSION` | Depression / behavioral health concern | `LOW_MOOD`, `SLEEP_DEFICIT`, `EXERCISE_DEFICIT` |
+| `NUTRITIONAL_DEFICIT` | Nutritional deficiency | `CALORIC_DEFICIT`, `EXERCISE_DEFICIT` |
+
+Rule for the UI: show these as "possible conditions to monitor", never as a diagnosis, and never
+compute them on the presentation side. An empty list is a normal, expected state.
 
 ---
 
@@ -243,7 +280,7 @@ not the production transport.
 - The data team **must announce** any format change before shipping it, and **must never
   silently change** units, key names or ranges. Adding an extra key is allowed without
   announcement (it is ignored), but it will not be used until the contract is updated.
-- Version of this contract: `astro-brain 0.1.0`.
+- Version of this contract: `astro-brain 0.2.0`.
 
 ---
 
@@ -252,7 +289,7 @@ not the production transport.
 | agent | zone |
 |---|---|
 | `contract-agent` | `src/astro_brain/contract.py`, `src/astro_brain/flags.py`, their tests, `AGENTS.md`, `pyproject.toml`. Owns input/output contract definitions. |
-| `scoring-agent` | `src/astro_brain/news2.py`, `src/astro_brain/radiation.py`, `src/astro_brain/lifestyle.py`, `src/astro_brain/vitals_flags.py`, `src/astro_brain/scoring.py` (NEWS2 + all flag rules from section 3) and their tests. |
+| `scoring-agent` | `src/astro_brain/news2.py`, `src/astro_brain/radiation.py`, `src/astro_brain/lifestyle.py`, `src/astro_brain/vitals_flags.py`, `src/astro_brain/scoring.py`, `src/astro_brain/conditions.py` (NEWS2 + all flag rules and IMM-lite conditions from section 3) and their tests. |
 | `doctor-agent` | `src/astro_brain/doctor/` (`__init__.py`, `layer.py`, `fallback.py`, `ollama_client.py`, `prompts.py` — recommendation text: llm / cache / fallback) and its tests, `src/astro_brain/pipeline.py` (`Brain`). |
 | `brain-qa-agent` | `src/astro_brain/mock.py`, `src/astro_brain/qa.py`, `examples/`, end-to-end tests, mock sample generators, contract conformance checks. |
 | `dashboard-agent` | `src/astro_brain/dashboard.py` (HTTP `POST /ingest`, `GET /state` on port 8765) and its tests. |

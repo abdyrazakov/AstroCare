@@ -33,6 +33,7 @@ CONTRACT_OUTPUT_KEYS: frozenset[str] = frozenset(
         "news2Score",
         "activeFlags",
         "flagDetails",
+        "likelyConditions",
         "doctorRecommendation",
         "doctorSource",
     }
@@ -64,6 +65,24 @@ def _expectations_for(step: Step) -> tuple[str, frozenset[str]]:
         return "green", frozenset()
     anomaly = ANOMALIES[step.anomaly_name]
     return anomaly.expected_level, anomaly.expected_codes
+
+
+def _expected_conditions_for(step: Step) -> frozenset[str]:
+    if step.anomaly_name is None:
+        return frozenset()
+    return ANOMALIES[step.anomaly_name].expected_conditions
+
+
+def _condition_codes(output: Mapping[str, Any]) -> set[str]:
+    conditions = output.get("likelyConditions", [])
+    return {condition["code"] for condition in conditions} if isinstance(conditions, list) else set()
+
+
+def _check_expected_conditions(output: Mapping[str, Any], expected: frozenset[str]) -> str | None:
+    missing = expected - _condition_codes(output)
+    if missing:
+        return f"missing expected conditions {sorted(missing)}"
+    return None
 
 
 def _mentions_a_concern(text: str, active_flags: set[str]) -> bool:
@@ -113,6 +132,7 @@ def _check_recommendation(
 def evaluate(step: Step, output: Mapping[str, Any]) -> StepResult:
     """Check ``output`` (``Brain.process(step.raw)``) against ``step``'s expectation."""
     expected_level, expected_codes = _expectations_for(step)
+    expected_conditions = _expected_conditions_for(step)
     active_flags = set(output.get("activeFlags", []))
 
     failures = [
@@ -122,6 +142,7 @@ def evaluate(step: Step, output: Mapping[str, Any]) -> StepResult:
             _check_json_serialisable(output),
             _check_alert_level(output, expected_level),
             _check_expected_codes(active_flags, expected_codes),
+            _check_expected_conditions(output, expected_conditions),
             _check_recommendation(output, expected_level, active_flags),
         )
         if failure is not None

@@ -34,6 +34,7 @@ class _AssessmentLike(Protocol):
     alert_level: str
     news2_total: int
     flags: tuple[_FlagLike, ...]
+    likely_conditions: tuple[Any, ...]
 
     def flag_codes(self) -> tuple[str, ...]: ...
 
@@ -47,6 +48,7 @@ def to_output(assessment: _AssessmentLike, recommendation: Recommendation) -> di
         "news2Score": assessment.news2_total,
         "activeFlags": [flag.code for flag in assessment.flags],
         "flagDetails": [flag.to_dict() for flag in assessment.flags],
+        "likelyConditions": [condition.to_dict() for condition in assessment.likely_conditions],
         "doctorRecommendation": recommendation.text,
         "doctorSource": recommendation.source,
     }

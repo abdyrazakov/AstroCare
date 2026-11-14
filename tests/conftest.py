@@ -73,6 +73,26 @@ class FakeFlag:
 
 
 @dataclass(frozen=True)
+class FakeCondition:
+    """Duck-type stand-in for ``astro_brain.conditions.LikelyCondition``."""
+
+    code: str
+    label: str = "condition"
+    confidence: float = 0.5
+    drivers: tuple[str, ...] = ()
+    evidence: str = "fake reference"
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "code": self.code,
+            "label": self.label,
+            "confidence": self.confidence,
+            "drivers": list(self.drivers),
+            "evidenceRef": self.evidence,
+        }
+
+
+@dataclass(frozen=True)
 class FakeAssessment:
     """Duck-type stand-in for ``astro_brain.scoring.Assessment``."""
 
@@ -82,9 +102,13 @@ class FakeAssessment:
     news2_total: int = 0
     news2_components: Mapping[str, int] = field(default_factory=dict)
     flags: tuple[FakeFlag, ...] = ()
+    likely_conditions: tuple[FakeCondition, ...] = ()
 
     def flag_codes(self) -> tuple[str, ...]:
         return tuple(sorted({flag.code for flag in self.flags}))
+
+    def condition_codes(self) -> tuple[str, ...]:
+        return tuple(condition.code for condition in self.likely_conditions)
 
 
 def make_assessment(
@@ -92,6 +116,7 @@ def make_assessment(
     alert_level: str = "green",
     news2_total: int = 0,
     flags: tuple[FakeFlag, ...] = (),
+    likely_conditions: tuple[FakeCondition, ...] = (),
     astronaut_id: str = "ASTRO-01",
     timestamp: str = "2026-11-14T10:00:00Z",
 ) -> FakeAssessment:
@@ -103,4 +128,5 @@ def make_assessment(
         news2_total=news2_total,
         news2_components={},
         flags=flags,
+        likely_conditions=likely_conditions,
     )
