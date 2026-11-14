@@ -14,6 +14,7 @@ flag code.
 from __future__ import annotations
 
 from astro_brain.contract import VitalsSample
+from astro_brain.evidence import EVIDENCE_BY_CODE
 from astro_brain.flags import Flag
 from astro_brain.news2 import (
     BP_SYSTOLIC_BANDS,
@@ -31,6 +32,8 @@ from astro_brain.news2 import (
     nominal_band_index,
 )
 
+# Design choice for flag emission; NEWS2 source bands are unchanged.
+# https://www.rcp.ac.uk/media/a4ibkkbf/news2-final-report_0_0.pdf (Charts 1–2)
 FLAGGED_MIN_SCORE = 2
 
 
@@ -60,7 +63,11 @@ def _two_sided_flag(
     else:
         code, direction = high_code, "high"
     message = f"{label} {value:g}{unit} is {direction} (crossed {threshold:g}{unit})."
-    return Flag(code=code, severity="yellow", message=message, value=value, threshold=threshold)
+    return Flag(
+        code=code, evidence=EVIDENCE_BY_CODE[code],
+        severity="yellow", message=message, value=value,
+        threshold=threshold
+    )
 
 
 def _spo2_flag(score: int, spo2: float) -> Flag | None:
@@ -68,14 +75,18 @@ def _spo2_flag(score: int, spo2: float) -> Flag | None:
         return None
     threshold = _edge_crossed(spo2, SPO2_BANDS)
     message = f"SpO2 {spo2:g}% is low (crossed {threshold:g}%)."
-    return Flag(code="SPO2_LOW", severity="yellow", message=message, value=spo2, threshold=threshold)
+    return Flag(
+        code="SPO2_LOW", evidence=EVIDENCE_BY_CODE["SPO2_LOW"],
+        severity="yellow", message=message, value=spo2,
+        threshold=threshold
+    )
 
 
 def _consciousness_flag(score: int) -> Flag | None:
     if score < FLAGGED_MIN_SCORE:
         return None
     return Flag(
-        code="CONSCIOUSNESS_ALTERED",
+        code="CONSCIOUSNESS_ALTERED", evidence=EVIDENCE_BY_CODE["CONSCIOUSNESS_ALTERED"],
         severity="yellow",
         message="Consciousness is altered.",
         value=None,
@@ -92,7 +103,7 @@ def _components_scoring_three(news2: News2Result) -> tuple[str, ...]:
 def _medium_total_flag(total: int) -> Flag:
     message = f"NEWS2 total {total} is medium risk."
     return Flag(
-        code="NEWS2_MEDIUM",
+        code="NEWS2_MEDIUM", evidence=EVIDENCE_BY_CODE["NEWS2_MEDIUM"],
         severity="yellow",
         message=message,
         value=total,
@@ -107,7 +118,7 @@ def _medium_single_parameter_flag(news2: News2Result) -> Flag:
         "— urgent re-check required."
     )
     return Flag(
-        code="NEWS2_MEDIUM",
+        code="NEWS2_MEDIUM", evidence=EVIDENCE_BY_CODE["NEWS2_MEDIUM"],
         severity="yellow",
         message=message,
         value=COMPONENT_THREE_SCORE,
@@ -118,7 +129,11 @@ def _medium_single_parameter_flag(news2: News2Result) -> Flag:
 def _aggregate_flag(news2: News2Result) -> Flag | None:
     if news2.total >= HIGH_RISK_TOTAL:
         message = f"NEWS2 total {news2.total} is high risk (>= {HIGH_RISK_TOTAL})."
-        return Flag(code="NEWS2_HIGH", severity="red", message=message, value=news2.total, threshold=HIGH_RISK_TOTAL)
+        return Flag(
+            code="NEWS2_HIGH", evidence=EVIDENCE_BY_CODE["NEWS2_HIGH"],
+            severity="red", message=message, value=news2.total,
+            threshold=HIGH_RISK_TOTAL,
+        )
     is_medium_total = MEDIUM_RISK_TOTAL_LOW <= news2.total <= MEDIUM_RISK_TOTAL_HIGH
     if is_medium_total:
         return _medium_total_flag(news2.total)

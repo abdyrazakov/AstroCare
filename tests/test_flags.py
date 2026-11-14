@@ -29,6 +29,7 @@ def test_flag_to_dict_exposes_all_contract_keys():
         "message": "Sleep below 6 h",
         "value": 4.5,
         "threshold": 6,
+        "evidenceRef": None,
     }
 
 

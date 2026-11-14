@@ -6,8 +6,10 @@ All four flags are yellow and independent of each other and of NEWS2.
 from __future__ import annotations
 
 from astro_brain.contract import VitalsSample
+from astro_brain.evidence import EVIDENCE_BY_CODE
 from astro_brain.flags import Flag
 
+# Operational cutoffs; source limitations are recorded in docs/EVIDENCE.md.
 EXERCISE_DEFICIT_RATIO = 0.5
 CALORIC_DEFICIT_RATIO = 0.7
 SLEEP_DEFICIT_HOURS = 6.0
@@ -24,7 +26,7 @@ def _exercise_deficit_flag(sample: VitalsSample) -> Flag | None:
         f"{sample.required_exercise_minutes} min target)."
     )
     return Flag(
-        code="EXERCISE_DEFICIT",
+        code="EXERCISE_DEFICIT", evidence=EVIDENCE_BY_CODE["EXERCISE_DEFICIT"],
         severity="yellow",
         message=message,
         value=sample.exercise_minutes_today,
@@ -42,7 +44,7 @@ def _caloric_deficit_flag(sample: VitalsSample) -> Flag | None:
         f"{sample.caloric_target} kcal target)."
     )
     return Flag(
-        code="CALORIC_DEFICIT",
+        code="CALORIC_DEFICIT", evidence=EVIDENCE_BY_CODE["CALORIC_DEFICIT"],
         severity="yellow",
         message=message,
         value=sample.caloric_intake,
@@ -55,7 +57,7 @@ def _sleep_deficit_flag(sample: VitalsSample) -> Flag | None:
         return None
     message = f"Only {sample.sleep_hours:g} h of sleep; minimum is {SLEEP_DEFICIT_HOURS:g} h."
     return Flag(
-        code="SLEEP_DEFICIT",
+        code="SLEEP_DEFICIT", evidence=EVIDENCE_BY_CODE["SLEEP_DEFICIT"],
         severity="yellow",
         message=message,
         value=sample.sleep_hours,
@@ -68,7 +70,7 @@ def _low_mood_flag(sample: VitalsSample) -> Flag | None:
         return None
     message = f"Mood score {sample.mood_score} is at or below the low-mood threshold of {LOW_MOOD_MAX}."
     return Flag(
-        code="LOW_MOOD",
+        code="LOW_MOOD", evidence=EVIDENCE_BY_CODE["LOW_MOOD"],
         severity="yellow",
         message=message,
         value=sample.mood_score,

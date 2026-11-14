@@ -94,7 +94,7 @@ def test_red_sample_has_red_alert_level_and_contract_shaped_output():
     assert output["astronautId"] == "ASTRO-02"
     assert output["timestamp"] == "2026-11-14T10:05:00Z"
     for detail in output["flagDetails"]:
-        assert set(detail.keys()) == {"code", "severity", "message", "value", "threshold"}
+        assert set(detail.keys()) == {"code", "severity", "message", "value", "threshold", "evidenceRef"}
 
 
 def test_invalid_sample_raises_contract_error():

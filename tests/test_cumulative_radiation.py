@@ -9,6 +9,7 @@ from astro_brain.qa import evaluate
 from astro_brain.radiation import radiation_flags
 from astro_brain.scoring import assess
 
+# https://www.nasa.gov/reference/4-0-human-performance/
 # Requested NASA limits; source and unit assumption tracked in docs/EVIDENCE.md.
 LIMITS = (
     ("radiation_dose_30day_msv", "RADIATION_30DAY_LIMIT", 250.0),

@@ -127,14 +127,16 @@ One output object per processed input sample. Keys are **camelCase**.
       "severity": "yellow",
       "message": "Radiation dose rate 140.0 µSv/h is above the 100 µSv/h elevated threshold.",
       "value": 140.0,
-      "threshold": 100
+      "threshold": 100,
+      "evidenceRef": "Design thresholds; NOAA SWPC S2/S3; ISS background 12–30 µSv/h — VERIFY"
     },
     {
       "code": "SLEEP_DEFICIT",
       "severity": "yellow",
       "message": "Only 4.5 h of sleep; minimum is 6 h.",
       "value": 4.5,
-      "threshold": 6
+      "threshold": 6,
+      "evidenceRef": "Barger et al. 2014, Lancet Neurol, Table 2; 6 h cutoff is a design choice"
     }
   ],
   "doctorRecommendation": "Radiation is elevated but not critical; move to the shielded area until the dose rate drops. Sleep deficit may degrade reaction time, so schedule a rest period before any EVA tasks. Re-check vitals in 30 minutes.",
@@ -150,6 +152,7 @@ One output object per processed input sample. Keys are **camelCase**.
 | `news2Score` | int (0–20) | National Early Warning Score 2, computed from `hr`, `spo2`, `bp.systolic`, `temp_c`, `resp_rate`, `on_supplemental_o2`, `consciousness`. 0 = all vitals nominal. |
 | `activeFlags` | array of string | Codes of all flags currently active (same order as `flagDetails`). Empty array when everything is nominal. |
 | `flagDetails` | array of object | One entry per active flag: `code`, `severity` (`"yellow"` or `"red"`), human-readable `message`, the measured `value` that triggered it and the `threshold` it was compared with (`value`/`threshold` may be `null` when there is no single number, e.g. `CONSCIOUSNESS_ALTERED`). |
+| `flagDetails[].evidenceRef` | string or null | Short source identifier; populated for every built-in flag. Verification status and limitations are in `docs/EVIDENCE.md`. |
 | `doctorRecommendation` | string | 2–4 sentences of plain-language guidance for the crew. Always present, even at green. |
 | `doctorSource` | `"llm"` \| `"cache"` \| `"fallback"` | Where the recommendation came from: live language model, a cached answer for an identical flag set, or a built-in rule-based text when the model is unavailable. Presentation may show this as a small badge; it does not change how the text should be displayed. |
 

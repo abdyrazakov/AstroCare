@@ -8,8 +8,11 @@ Cumulative limits are independent and follow those existing radiation flags.
 from __future__ import annotations
 
 from astro_brain.contract import VitalsSample
+from astro_brain.evidence import EVIDENCE_BY_CODE
 from astro_brain.flags import Flag
 
+# Legacy design choices, not NASA limits: docs/EVIDENCE.md.
+# NOAA S-scale context: https://www.swpc.noaa.gov/noaa-scales-explanation
 RADIATION_ELEVATED_USVH = 100.0
 RADIATION_CRITICAL_USVH = 1000.0
 NOAA_S_ELEVATED = 2
@@ -50,7 +53,11 @@ def _critical_flag(dose: float, noaa: int | None) -> Flag:
             f"NOAA solar radiation storm scale S{noaa} is at or above the "
             f"critical S{NOAA_S_CRITICAL} threshold; seek shielding immediately."
         )
-    return Flag(code="RADIATION_CRITICAL", severity="red", message=message, value=value, threshold=threshold)
+    return Flag(
+        code="RADIATION_CRITICAL", evidence=EVIDENCE_BY_CODE["RADIATION_CRITICAL"],
+        severity="red", message=message, value=value,
+        threshold=threshold
+    )
 
 
 def _elevated_flag(dose: float, noaa: int | None) -> Flag:
@@ -66,7 +73,11 @@ def _elevated_flag(dose: float, noaa: int | None) -> Flag:
             f"NOAA solar radiation storm scale S{noaa} is at or above the "
             f"elevated S{NOAA_S_ELEVATED} threshold."
         )
-    return Flag(code="RADIATION_ELEVATED", severity="yellow", message=message, value=value, threshold=threshold)
+    return Flag(
+        code="RADIATION_ELEVATED", evidence=EVIDENCE_BY_CODE["RADIATION_ELEVATED"],
+        severity="yellow", message=message, value=value,
+        threshold=threshold
+    )
 
 
 def _instantaneous_flags(sample: VitalsSample) -> tuple[Flag, ...]:
@@ -87,7 +98,7 @@ def _limit_flag(dose: float | None, limit: float, code: str, label: str) -> Flag
     critical = dose >= limit * CRITICAL_FRACTION
     fraction = CRITICAL_FRACTION if critical else WARN_FRACTION
     return Flag(
-        code=code,
+        code=code, evidence=EVIDENCE_BY_CODE[code],
         severity="red" if critical else "yellow",
         message=f"{label} dose {dose:g} mSv is {dose / limit:.0%} of the limit.",
         value=dose,

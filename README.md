@@ -183,6 +183,7 @@ examples/             sample input/output JSON for manual testing and docs
 **Done:** contract validation, NEWS2/radiation/lifestyle scoring, the Doctor Layer (cache,
 3 s timeout, fallback, background upgrade), the debug dashboard, the mock-data QA runner.
 335 tests passing, QA 24/24.
+Each built-in flag now includes `evidenceRef`; sources and verification status: [docs/EVIDENCE.md](docs/EVIDENCE.md).
 
 **Next (planned, not implemented):**
 

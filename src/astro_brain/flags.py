@@ -27,6 +27,7 @@ class Flag:
     message: str
     value: FlagValue = None
     threshold: FlagValue = None
+    evidence: str | None = None
 
     def __post_init__(self) -> None:
         if self.severity not in _VALID_SEVERITIES:
@@ -43,6 +44,7 @@ class Flag:
             "message": self.message,
             "value": self.value,
             "threshold": self.threshold,
+            "evidenceRef": self.evidence,
         }
 
 
