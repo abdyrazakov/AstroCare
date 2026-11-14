@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-11-14T10:00:00Z",
+  "astronautId": "ASTRO-02",
+  "alertLevel": "red",
+  "news2Score": 0,
+  "activeFlags": [
+    "RADIATION_CRITICAL"
+  ],
+  "flagDetails": [
+    {
+      "code": "RADIATION_CRITICAL",
+      "severity": "red",
+      "message": "Radiation dose rate 1500.0 \u00b5Sv/h is at or above the 1000 \u00b5Sv/h critical threshold; seek shielding immediately.",
+      "value": 1500.0,
+      "threshold": 1000.0
+    }
+  ],
+  "doctorRecommendation": "IMMEDIATE ACTION REQUIRED. Radiation dose rate is critical; move to the most shielded area immediately. Contact ground medical now.",
+  "doctorSource": "fallback"
+}

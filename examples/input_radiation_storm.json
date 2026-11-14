@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-11-14T10:00:00Z",
+  "astronaut_id": "ASTRO-02",
+  "hr": 68,
+  "spo2": 98,
+  "bp": {
+    "systolic": 118,
+    "diastolic": 76
+  },
+  "temp_c": 36.7,
+  "resp_rate": 15,
+  "radiation_dose_rate": 1500.0,
+  "exercise_minutes_today": 120,
+  "required_exercise_minutes": 150,
+  "caloric_intake": 2600,
+  "caloric_target": 2800,
+  "sleep_hours": 7.5,
+  "mood_score": 8
+}
